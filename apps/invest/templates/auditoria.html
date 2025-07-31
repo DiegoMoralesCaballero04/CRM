@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block contenido %}
+
+<style>
+  .auditoria-panel {
+    max-width: 1100px;
+    margin: 40px auto;
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .auditoria-panel h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #012060;
+  }
+
+  .tabla-auditoria {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .tabla-auditoria th, .tabla-auditoria td {
+    border: 1px solid #ccc;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .tabla-auditoria th {
+    background-color: #012060;
+    color: white;
+  }
+
+  .tabla-auditoria tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .tabla-auditoria tr:hover {
+    background-color: #eef2fa;
+  }
+</style>
+
+<div class="auditoria-panel">
+  <h2>Panel de Auditoría</h2>
+  <table class="tabla-auditoria">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Usuario</th>
+        <th>Modelo</th>
+        <th>ID</th>
+        <th>Acción</th>
+        <th>Descripción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in auditorias %}
+        <tr>
+          <td>{{ a.creado_en|date:"d/m/Y H:i" }}</td>
+          <td>{{ a.usuario.username }}</td>
+          <td>{{ a.modelo }}</td>
+          <td>{{ a.objeto_id }}</td>
+          <td>{{ a.get_accion_display }}</td>
+          <td>{{ a.descripcion }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6">No hay registros de auditoría.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

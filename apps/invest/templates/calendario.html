@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block contenido %}
+
+<style>
+  #calendar {
+    max-width: 1000px;
+    margin: 40px auto;
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-add-evento {
+    display: block;
+    margin: 20px auto 0 auto;
+  }
+
+  .evento-general {
+    background-color: #0099cc !important;
+    border: none;
+    color: white !important;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 2px 4px;
+  }
+
+  .evento-propuesta {
+    background-color: #012060 !important;
+    color: white !important;
+    border: none;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 2px 4px;
+  }
+
+  .fc-event-title {
+    white-space: normal;
+  }
+
+  .fc-daygrid-event {
+    font-size: 13px;
+    line-height: 1.2;
+    padding: 2px;
+  }
+</style>
+
+<!-- Botón para abrir el modal -->
+<button class="btn btn-primary btn-add-evento" data-bs-toggle="modal" data-bs-target="#modalEvento">
+  Crear evento
+</button>
+
+<!-- Calendario -->
+<div id="calendar"></div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalEvento" tabindex="-1" aria-labelledby="modalEventoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formEvento">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEventoLabel">Nuevo evento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="fechaEvento" class="form-label">Fecha</label>
+            <input type="date" class="form-control" id="fechaEvento" required>
+          </div>
+          <div class="mb-3">
+            <label for="horaEvento" class="form-label">Hora</label>
+            <input type="time" class="form-control" id="horaEvento" required>
+        </div>
+          <div class="mb-3">
+            <label for="descripcionEvento" class="form-label">Descripción</label>
+            <input type="text" class="form-control" id="descripcionEvento" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('calendar');
+
+  let eventos = [];
+  try {
+    eventos = JSON.parse('{{ eventos_json|escapejs }}');
+  } catch (e) {
+    console.error("Error al parsear eventos_json:", e);
+  }
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    events: eventos,
+    locale: 'es',
+    timeZone: 'local',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    }
+  });
+
+  calendar.render();
+
+  // Formulario de creación de eventos
+  const formEvento = document.getElementById('formEvento');
+  const btnGuardar = formEvento.querySelector('button[type="submit"]');
+
+  formEvento.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const fecha = document.getElementById('fechaEvento').value;
+    const descripcion = document.getElementById('descripcionEvento').value;
+    const hora = document.getElementById('horaEvento').value;
+
+    btnGuardar.disabled = true;
+
+    fetch("{% url 'crear_evento' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+    body: JSON.stringify({ fecha, hora, descripcion })
+    })
+    .then(response => response.json())
+    .then(data => {
+      btnGuardar.disabled = false;
+      if (data.success) {
+        calendar.addEvent({
+          title: descripcion,
+          start: fecha,
+          classNames: ['evento-general']
+        });
+
+        // Cerrar modal y limpiar
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalEvento'));
+        modal.hide();
+        formEvento.reset();
+      } else {
+        alert("Error al crear el evento: " + data.error);
+      }
+    })
+    .catch(error => {
+      btnGuardar.disabled = false;
+      console.error("Error en la petición:", error);
+    });
+  });
+
+  // Función CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+</script>
+{% endblock %}

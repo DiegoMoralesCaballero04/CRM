@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+<!-- {-% load crispy_forms_tags %-} -->
+
+
+{% block contenido %}
+<div class="d-flex">
+    <div class="col-8">
+        <h1>{% if object %}Editar proveedor {{object}} {% else %}Añadir proveedor{% endif %} </h1>
+        <form method="post">
+            {% csrf_token %}
+                <!-- {-% crispy form %-} -->
+            <div class='m-3'>
+            {% bootstrap_form form %}
+            {% bootstrap_button button_type="submit" content="Guardar" %}
+            </div>
+        </form>
+    </div>
+    <div class="col-4">
+        <a href="/campanya/"><button class='btn btn-secondary'>Volver a campañas</button></a>
+    </div>
+</div>
+<div hx-get="/proveedor/" hx-trigger="load"></div>
+{% endblock %}

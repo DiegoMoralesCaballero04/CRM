@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block contenido %}
+    {% if user.cliente %}
+        <div hx-get="/misofertas/" hx-trigger="load"></div>
+    {% else %}
+    	<div class='container' style="max-width: 1200px;">
+			<h1>Bienvenido a la aplicación de gestión de activos del Grupo MSS</h1>
+		    <div class="stats">
+	            <a href="/campanya/" style="text-decoration: none;">
+	            	<div class="card">
+		                <div class="icon">📑</div>
+		                <div class="label">Campañas activas</div>
+		                <div class="value">{{ NumCampanyas }}</div>
+	            	</div>
+	            </a>
+	            <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+		                <div class="icon">🏘</div>
+		                <div class="label">Activos totales</div>
+		                <div class="value">{{ NumActivos }}</div>
+		            </div>
+		        </a>
+		        <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+			            <div class="icon">📄</div>
+		                <div class="label">Propuestas enviadas</div>
+		                <div class="value">{{ NumPropuestas }}</div>
+		            </div>
+		        </a>
+	            <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+			            <div class="icon">📋</div>
+		                <div class="label">Activos propuestos</div>
+		                <div class="value">{{ NumPropuestas_activos }}</div>
+		            </div>
+		        </a>
+	            <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+			            <div class="icon">✅</div>
+		                <div class="label">Propuestas seleccionadas</div>
+		                <div class="value">{{ NumPropuestas_Interesadas }}</div>
+		            </div>
+		        </a>
+	            <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+			            <div class="icon">⏱</div>
+		                <div class="label">Propuestas esperando info de los servicers</div>
+		                <div class="value">{{ NumPropuestas_Esperando }}</div>
+		            </div>
+		        </a>
+	            <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+				        <div class="icon">🧑‍💻</div>
+		                <div class="label">Propuestas enviadas a clientes</div>
+		                <div class="value">{{ NumPropuestas_Preparadas }}</div>
+		            </div>
+	            </a>
+	            <a href="/campanya/" style="text-decoration: none;">
+		            <div class="card">
+				        <div class="icon">💵</div>
+		                <div class="label">Propuestas aceptadas</div>
+		                <div class="value">{{ NumPropuestas_Reservadas }}</div>
+		            </div>
+		        </a>
+	        </div>
+        </div>
+    {% endif %}
+{% endblock %}

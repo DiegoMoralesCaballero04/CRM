@@ -1,0 +1,136 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+{% load static %}
+
+{% block style_css %}
+<style>
+    .container {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+    }
+
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        width: 100%;
+        padding: 20px;
+        margin: auto;
+    }
+
+    .card h2 {
+        margin-bottom: 20px;
+        font-size: 24px;
+        color: #012060;
+    }
+
+    .card p {
+        margin: 10px 0;
+    }
+
+    .label {
+        font-weight: bold;
+        color: #555;
+    }
+
+    .value {
+        color: #000;
+    }
+
+    .actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .button {
+        padding: 10px 15px;
+        font-size: 14px;
+        border-radius: 4px;
+        color: #fff;
+        border: none;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-crear {
+        background-color: #28a745;
+    }
+
+    .btn-editar {
+        background-color: #ffc107;
+    }
+
+    .btn-eliminar {
+        background-color: #dc3545;
+    }
+
+    .button:hover {
+        opacity: 0.85;
+    }
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container">
+    <div style="margin-top: 20px; text-align: right;">
+        <a href="{% url 'agenda_crear' %}" class="button btn-crear">➕ Crear nuevo</a>
+        <br/><br/>
+    </div>
+    {% if agendas %}
+        <table style="width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <thead style="background-color: #012060; color: #fff;">
+                <tr>
+                    <th style="padding: 10px;">Nombre</th>
+                    <th style="padding: 10px;">Apellidos</th>
+                    <th style="padding: 10px;">Empresa</th>
+                    <th style="padding: 10px;">Descripción</th>
+                    <th style="padding: 10px;">Tel. móvil</th>
+                    <th style="padding: 10px;">Tel. fijo</th>
+                    <th style="padding: 10px;">Email</th>
+                    <th style="padding: 10px;">Creado por</th>
+                    <th style="padding: 10px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for agenda in agendas %}
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 10px;">{{ agenda.nombre }}</td>
+                    <td style="padding: 10px;">{{ agenda.apellidos }}</td>
+                    <td style="padding: 10px;">{{ agenda.empresa }}</td>
+                    <td style="padding: 10px;">{{ agenda.descripcion }}</td>
+                    <td style="padding: 10px;">{{ agenda.telefono }}</td>
+                    <td style="padding: 10px;">{{ agenda.fijo }}</td>
+                    <td style="padding: 10px;">{{ agenda.email }}</td>
+                    {% if agenda.creado_por %}
+                        <td style="padding: 10px;">{{ agenda.creado_por.get_full_name|default:agenda.creado_por.username }}</td>
+                    {% else %}
+                        <td style="padding: 10px;"><em>No asignado</em></td>
+                    {% endif %}                    
+                    <td style="padding: 10px; text-align: center;">
+                        <a href="{% url 'agenda_editar' agenda.id %}" class="button btn-editar">✏️</a>
+                        <form action="{% url 'agenda_eliminar' agenda.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button btn-eliminar" onclick="if (confirm('¿Desea eliminar este contacto?')) { showAlert('✅ Contacto eliminado correctamente.', 'success'); return true; } return false;">
+                                🗑️
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">No hay contactos en la agenda.</p>
+    {% endif %}
+
+
+</div>
+
+{% endblock %}

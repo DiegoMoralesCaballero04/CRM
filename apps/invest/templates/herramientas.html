@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block contenido %}
+    <div class="container" style="max-width: 1200px;">
+        <div class="table-actions">
+            <h1>Pantalla de Herramientas</h1>
+        </div>
+        <div class='d-none'>
+            <label class='col'><input type="radio" name="o_herramientas" id='o_herramientas_poblaciones' checked>Modificación de poblaciones</label>
+            <label class='col'><input type="radio" name="o_herramientas" id='o_herramientas_tipologías'>Modificación de tipologías</label>
+        </div>
+    </div>  
+        
+    <div id='div_poblaciones' class="d-flex">
+        <div class='col-4' style="padding:50px">
+            <h5>Seleccione la población original</h5>
+            <div class="col-md-12">
+                <label for="provincia_bactivo" class="form-label">Provincia</label>
+                <input type="text" id="filtro_provincia" class="form-control mb-2" placeholder="Buscar provincia...">
+                <div id="provincia_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for provincia in provincias %}
+                    <div class="form-check provincia-item">
+                        <input class="form-check-input" type="radio" name="provincia_bactivo" value="{{ provincia.pk }}" id="provincia_{{ provincia.pk }}" onchange="actualizarPoblaciones()">
+                        <label class="form-check-label" for="provincia_{{ provincia.pk }}">
+                            {{ provincia.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Población -->
+            <div class="col-md-12">
+                <label for="municipio_bactivo" class="form-label">Población</label>
+
+                <input type="text" id="filtro_poblacion" class="form-control mb-2" placeholder="Buscar población...">                
+                <div id="municipio_bactivo" style="max-height: 450px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for poblacion in poblaciones %}
+                    <div class="form-check poblacion-item">
+                        <input class="form-check-input" type="radio" name="poblacion_bactivo" value="{{ poblacion.pk }}" id="poblacion_{{ poblacion.pk }}">
+                        <label class="form-check-label" for="poblacion_{{ poblacion.pk }}">
+                            {{ poblacion.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    
+        <div class='col-4' style="padding:50px">
+            <h5>Seleccione la población final</h5>
+            <div class="col-md-12">
+                <label for="provincia_bactivo2" class="form-label">Provincia</label>
+                <input type="text" id="filtro_provincia2" class="form-control mb-2" placeholder="Buscar provincia...">
+                <div id="provincia_bactivo2" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for provincia in provincias %}
+                    <div class="form-check provincia-item">
+                        <input class="form-check-input" type="radio" name="provincia_bactivo2" value="{{ provincia.pk }}" id="provincia2_{{ provincia.pk }}" onchange="actualizarPoblaciones2()">
+                        <label class="form-check-label" for="provincia2_{{ provincia.pk }}">
+                            {{ provincia.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Población -->
+            <div class="col-md-12">
+                <label for="municipio_bactivo2" class="form-label">Población</label>
+
+                <input type="text" id="filtro_poblacion2" class="form-control mb-2" placeholder="Buscar población...">                
+                <div id="municipio_bactivo2" style="max-height: 450px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for poblacion in poblaciones %}
+                    <div class="form-check poblacion-item2">
+                        <input class="form-check-input" type="radio" name="poblacion_bactivo2" value="{{ poblacion.pk }}" id="poblacion2_{{ poblacion.pk }}">
+                        <label class="form-check-label" for="poblacion2_{{ poblacion.pk }}">
+                            {{ poblacion.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+        <div class='col-4' style="padding:50px">
+            <button class="btn btn-primary" onclick="UnirPoblaciones()">Unir Poblaciones</button>
+        </div>
+    </div>
+
+
+    <div id='div_tipologias' class="d-flex">
+        <div class='col-4' style="padding:50px">
+            <h5>Seleccione la tipología inicial</h5>
+            <div class="col-md-12">
+                <div id="tipologia_bactivo" style="max-height: 450px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for grupo in grupos %}
+                        <div class="form-check tipologia-item">
+                            <input class="form-check-input" type="radio" name="tipologia" value="{{ tipologia.pk }}" id="tipologia_{{ tipologia.pk }}">
+                            <label class="form-check-label" for="tipologia_{{ tipologia.pk }}">
+                                {{ grupo.nombre }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    
+        <div class='col-4' style="padding:50px">
+            <h5>Seleccione el tipo</h5>
+            <div class="col-md-12">
+                <div id="tipologia_bactivo" style="max-height: 450px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for subgrupo in subgrupos %}
+                        <div class="form-check subgrupo-item">
+                            <input class="form-check-input" type="radio" name="subgrupo" value="{{ subgrupo.pk }}" id="subgrupo_{{ subgrupo.pk }}">
+                            <label class="form-check-label" for="subgrupo_{{ subgrupo.pk }}">
+                                {{ subgrupo.grupo.nombre }} - {{subgrupo.nombre}}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class='col-4' style="padding:50px">
+            <button class="btn btn-primary" onclick="ClasificaTipologias()">Clasificar tipologías</button>
+        </div>
+    </div>
+
+    <div class="container d-flex justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6 my-5 p-4 shadow rounded bg-white border">
+            <h4 class="mb-4 text-primary text-center"><i class="bi bi-plus-circle me-2"></i>Añadir valor a la tabla</h4>
+    
+            <div class="row mb-3">
+                <div class="col-6">
+                    <!-- Prueba, campos cogidos view en el futuro -->
+                    <label for="tabla" class="form-label">Selecciona una tabla:</label>
+                    <select id="tabla" class="form-select">
+                        <option value="">-- Selecciona --</option>
+                        <option value="DO VALUE">DO VALUE</option>
+                        <option value="COPERNICUS">COPERNICUS</option>
+                        <option value="FINSOLUTIA">FINSOLUTIA</option>
+                        <option value="GESCOBRO">GESCOBRO</option>
+                        <option value="IBERCAJA">IBERCAJA</option>
+                        <option value="SOLVIA">SOLVIA</option>
+                        <option value="CAJAMAR">CAJAMAR</option>
+                        <option value="SERVIHABITAT">SERVIHABITAT</option>
+                        <option value="VENTA DIRECTA">VENTA DIRECTA</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label for="campo" class="form-label">Selecciona un campo:</label>
+                    <select id="campo" class="form-select">
+                        <option value="">-- Selecciona un campo --</option>
+                        <option value="ID">ID</option>
+                        <option value="RefUE">RefUE</option>
+                        <option value="Tipo">Tipo</option>
+                        <option value="Ref. Catastral">Ref. Catastral</option>
+                        <option value="CP">CP</option>
+                        <option value="Dirección">Dirección</option>
+                        <option value="Municipio">Municipio</option>
+                        <option value="Provincia">Provincia</option>
+                        <option value="Precio">Precio</option>
+                        <option value="Importe Deuda">Importe Deuda</option>
+                        <option value="estado_ocupacional">estado_ocupacional</option>
+                        <option value="FASE LEGAL 1">FASE LEGAL 1</option>
+                        <option value="FASE LEGAL 2">FASE LEGAL 2</option>
+                        <option value="Alquilado">Alquilado</option>
+                        <option value="Observaciones">Observaciones</option>
+                        <option value="URL">URL</option>
+                        <option value="Clase">Clase</option>
+                        <option value="valor_referencia">valor_referencia</option>
+                        <option value="m2">m2</option>
+                        <option value="Latitud">Latitud</option>
+                        <option value="Longitud">Longitud</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="mb-3">
+                <label for="nuevoValor" class="form-label">Nuevo valor:</label>
+                <input type="text" id="nuevoValor" class="form-control" placeholder="Introduce el nuevo valor">
+            </div>
+    
+            <div class="text-end">
+                <button class="btn btn-primary w-100" onclick="AnyadirValor()">
+                    <i class="bi bi-save me-2"></i>Añadir valor
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script type="text/javascript">
+    function AnyadirValor() {
+        const tabla = document.getElementById("tabla").value;
+        const campo = document.getElementById("campo").value;
+        const nuevoValor = document.getElementById("nuevoValor").value.trim();
+    
+        if (!tabla || !campo || !nuevoValor) {
+            showAlert("Debes seleccionar tabla, campo y escribir un valor.", 'danger');
+            return;
+        }
+    
+        fetch("/herramientas/api/actualizar_mapeo/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify({ tabla, campo, nuevoValor })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.ok) {
+                showAlert(data.mensaje, 'success');
+            } else {
+                showAlert(data.mensaje, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert("Ocurrió un error al guardar.", 'danger');
+        });
+    }
+    
+    
+//ORIGINAL
+// Función para filtrar las provincias
+    const filtroInputProv = document.getElementById('filtro_provincia');
+    filtroInputProv.addEventListener('input', function() {
+        let provinciasDiv = document.getElementById('provincia_bactivo');
+        let provinciaItems = provinciasDiv.getElementsByClassName('provincia-item');
+        let filtroValor = filtroInputProv.value.toLowerCase();
+        for (let item of provinciaItems) {
+            const nombreProvincia = item.querySelector('label').textContent.toLowerCase();
+            if (nombreProvincia.includes(filtroValor)) {
+                item.style.display = ''; // Mostrar la población
+            } else {
+                item.style.display = 'none'; // Ocultar la población
+            }
+        }
+    });
+        // Función para filtrar las poblaciones
+    const filtroInput = document.getElementById('filtro_poblacion');
+    filtroInput.addEventListener('input', function() {
+        let poblacionesDiv = document.getElementById('municipio_bactivo');
+        let poblacionItems = poblacionesDiv.getElementsByClassName('poblacion-item');
+
+        let filtroValor = filtroInput.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        // Iterar sobre todas las poblaciones y mostrar solo las que coincidan con el filtro
+        for (let item of poblacionItems) {
+            const nombrePoblacion = item.querySelector('label').textContent.toLowerCase();
+            if (nombrePoblacion.includes(filtroValor)) {
+                item.style.display = ''; // Mostrar la población
+            } else {
+                item.style.display = 'none'; // Ocultar la población
+            }
+        }
+    });
+
+    function actualizarPoblaciones(){
+        const checkboxes = document.querySelectorAll("#provincia_bactivo .form-check-input");
+        provinciasSeleccionadas = [];
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                provinciasSeleccionadas.push(checkbox.value);
+            }
+        });
+        const provinciasSeleccionadasStr = provinciasSeleccionadas.join(',');
+        fetch(`{% url 'apicampanya' %}?provincia=${provinciasSeleccionadasStr}&accion=cargar_poblaciones_radio`)
+            .then(response => response.json())
+            .then(data => {
+                // Limpiar las opciones de cartera
+                municipio_bactivo.innerHTML=data.html
+            })
+            .catch(error => showAlert("Error al cargar carteras:"+ error, 'danger'));
+    }
+
+
+//FINAL
+    // Función para filtrar las provincias
+    const filtroInputProv2 = document.getElementById('filtro_provincia2');
+    filtroInputProv2.addEventListener('input', function() {
+        let provinciasDiv = document.getElementById('provincia_bactivo2');
+        let provinciaItems = provinciasDiv.getElementsByClassName('provincia-item');
+        let filtroValor = filtroInputProv2.value.toLowerCase();
+        for (let item of provinciaItems) {
+            const nombreProvincia = item.querySelector('label').textContent.toLowerCase();
+            if (nombreProvincia.includes(filtroValor)) {
+                item.style.display = ''; // Mostrar la población
+            } else {
+                item.style.display = 'none'; // Ocultar la población
+            }
+        }
+    });
+        // Función para filtrar las poblaciones
+    const filtroInput2 = document.getElementById('filtro_poblacion2');
+    filtroInput2.addEventListener('input', function() {
+        let poblacionesDiv = document.getElementById('municipio_bactivo2');
+        let poblacionItems = poblacionesDiv.getElementsByClassName('poblacion-item');
+
+        let filtroValor = filtroInput2.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        // Iterar sobre todas las poblaciones y mostrar solo las que coincidan con el filtro
+        for (let item of poblacionItems) {
+            const nombrePoblacion = item.querySelector('label').textContent.toLowerCase();
+            if (nombrePoblacion.includes(filtroValor)) {
+                item.style.display = ''; // Mostrar la población
+            } else {
+                item.style.display = 'none'; // Ocultar la población
+            }
+        }
+    });
+
+    function actualizarPoblaciones2(){
+        const checkboxes = document.querySelectorAll("#provincia_bactivo2 .form-check-input");
+        provinciasSeleccionadas = [];
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                provinciasSeleccionadas.push(checkbox.value);
+            }
+        });
+        const provinciasSeleccionadasStr = provinciasSeleccionadas.join(',');
+        fetch(`{% url 'apicampanya' %}?provincia=${provinciasSeleccionadasStr}&accion=cargar_poblaciones_radio&id_name=poblacion2_&name=poblacion_bactivo2`)
+            .then(response => response.json())
+            .then(data => {
+                // Limpiar las opciones de cartera
+                municipio_bactivo2.innerHTML=data.html
+            })
+            .catch(error => console.error("Error al cargar carteras:", error));
+    }
+
+    function UnirPoblaciones(){
+        let poblacion_inicial=document.querySelector('input[name="poblacion_bactivo"]:checked')
+        let poblacion_final=document.querySelector('input[name="poblacion_bactivo2"]:checked')
+        if (poblacion_inicial.value && poblacion_final.value){
+            if (poblacion_inicial.value == poblacion_final.value){
+                MostrarAlertaError("Debe seleccionar dos poblaciones diferentes")
+            }
+            else{
+                let label_poblacion_inicial = document.querySelector(`label[for="${poblacion_inicial.id}"]`);
+                if (label_poblacion_inicial) {
+                    label_poblacion_inicial=(label_poblacion_inicial.textContent.trim());
+                }
+                let label_poblacion_final = document.querySelector(`label[for="${poblacion_final.id}"]`);
+                if (label_poblacion_final) {
+                    label_poblacion_final=(label_poblacion_final.textContent.trim());
+                }
+
+                if (confirm("¿Desea traspasar la población seleccionada " + label_poblacion_inicial + " a " + label_poblacion_final + "?")){
+                    let id_poblacion_old=poblacion_inicial.value
+                    let id_poblacion_new=poblacion_final.value
+                    const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+                    const params = new URLSearchParams({
+                        accion:'modificar_poblacion_activo',
+                        id_poblacion_old,
+                        id_poblacion_new
+                    });
+                    const url = `${baseUrl}?${params.toString()}`;
+                    const options = {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json', 
+                        }
+                    };
+                    fetch(url, options)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la solicitud: ' + response.statusText);
+                            }
+                            return response.json(); // Convertimos la respuesta a JSON
+                        })
+                        .then(data => {
+                            if (data.error){
+                                MostrarAlertaError(data.literror)
+                            }else{
+                                actualizarPoblaciones()
+                                actualizarPoblaciones2()
+                                MostrarAlertaMensaje("Población modificada")
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error en el fetch:', error);
+                        });
+                }
+            }
+        }else{
+            MostrarAlertaError("Debe seleccionar dos poblaciones")
+        }
+    }
+
+    function ClasificaTipologias(){
+        let tipologia=document.querySelector('input[name="tipologia"]:checked')
+        let subgrupo=document.querySelector('input[name="subgrupo"]:checked')
+        print(tipologia, subgrupo)
+        
+
+        if (tipologia.value && subgrupo.value){
+            if (tipologia.value == subgrupo.value){
+                MostrarAlertaError("Debe seleccionar la tipología y el tipo")
+            }
+            else{
+                let label_tipologia = document.querySelector(`label[for="${tipologia.id}"]`);
+                if (label_tipologia) {
+                    label_tipologia=(label_tipologia.textContent.trim());
+                }
+                let label_subgrupo = document.querySelector(`label[for="${subgrupo.id}"]`);
+                if (label_subgrupo) {
+                    label_subgrupo=(label_subgrupo.textContent.trim());
+                }
+
+                if (confirm("¿Desea traspasar la tipologia " + label_tipologia + " a " + label_subgrupo + "?")){
+                    let id_tipologia=tipologia.value
+                    let id_subgrupo=subgrupo.value
+                    const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+                    const params = new URLSearchParams({
+                        accion:'modificar_tipologia_activo',
+                        id_tipologia,
+                        id_subgrupo
+                    });
+                    const url = `${baseUrl}?${params.toString()}`;
+                    const options = {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json', 
+                        }
+                    };
+                    fetch(url, options)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la solicitud: ' + response.statusText);
+                            }
+                            return response.json(); // Convertimos la respuesta a JSON
+                        })
+                        .then(data => {
+                            if (data.error){
+                                MostrarAlertaError(data.literror)
+                            }else{
+                                let input = document.getElementById('tipologia_' + id_tipologia);
+                                if (input) {
+                                    let divPadre = input.closest('.form-check.tipologia-item'); // Encuentra el div padre
+                                    if (divPadre) {
+                                        divPadre.remove(); // Elimina el div
+                                    }
+                                }
+                                MostrarAlertaMensaje("Tipología modificada")
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error en el fetch:', error);
+                        });
+                }
+            }
+        }else{
+            MostrarAlertaError("Debe seleccionar dos tipologías")
+        }
+    }
+
+</script>
+{% endblock %}

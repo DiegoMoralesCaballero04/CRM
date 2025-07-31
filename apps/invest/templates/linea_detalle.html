@@ -1,0 +1,246 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+{% load static %}
+
+{% block style_css %} 
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            margin: auto;
+            text-align: left;
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .card .label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .card .value {
+            font-weight: normal;
+            color: #333;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357ab7;
+        }
+    </style>
+{% endblock %}
+
+{% block contenido %}
+    <div class="container">
+
+    <div class="card">
+        <h3>Activo.</h3>
+        {% if object.activo.no_disponible %}
+            <h1 style='color:red'>NO DISPONIBLE</h1>
+        {% endif %}
+        {% if not user.cliente %}
+            <p><span class="label col-4">Campanya:</span> <span class="value">{{ object.campanya.fecha }} {{ object.campanya.proveedor.nombre }}</span></p>
+            <p><span class="label col-4">Id proveedor:</span> <span class="value">{{ object.activo.id_proveedor }}</span></p>
+            <p><span class="label col-4">Ref UE:</span> <span class="value">{{ object.activo.ref_ue }}</span></p>
+        {% endif %}
+        <p><span class="label col-4">Tipo:</span> <span class="value">{{ object.activo.tipologia.nombre }}</span></p>
+        {% if not user.cliente %}
+            <p><span class="label col-4">Ref catastral:</span> <span class="value">{{ object.activo.ref_catastral }}</span></p>
+        {% endif %}
+        <p>
+            <span class="label col-4">Dirección:</span> 
+            <span class="value">{{ object.activo.direccion }}<br/>
+            <b>{{ object.cp }} {{ object.activo.poblacion }}</b><br/>
+            {{ object.activo.poblacion.provincia.nombre }}</span>            
+        </p>
+        {% if object.activo.m2 or object.activo.fecha_construccion or object.activo.num_habitaciones or object.activo.num_banyos %}
+            <p>
+            {% if object.activo.fecha_construccion %}
+                <span class="label col-3">Construcción:</span> <span class="value">{{ object.activo.fecha_construccion }}</span>
+            {% endif %}
+            {% if object.activo.m2 %}
+                <span class="label col-3">m²:</span> <span class="value">{{ object.activo.m2 | floatformat:"g" }}</span>
+            {% endif %}
+            {% if object.activo.num_habitaciones %}
+                <span class="label col-3">Habitaciones:</span> <span class="value">{{ object.activo.num_habitaciones }}</span>
+            {% endif %}
+            {% if object.activo.num_banyos %}
+                <span class="label col-3">Baños:</span> <span class="value">{{ object.activo.num_banyos }}</span>
+            {% endif %}
+            </p>
+        {% endif %}
+        <p><span class="label col-4">Precio:</span> <span class="value">{{ object.precio| floatformat:"g" }}</span></p>
+        <p><span class="label col-4">Estado:</span> <span class="value">{{ object.get_estado_ocupacional_display }}</span></p>
+        <p><span class="label col-4">Estado legal:</span> <span class="value">{{ object.estado_legal }}</span></p>
+        <p><span class="label col-4">Observaciones:</span> <span class="value">{{ object.estado_ocupacional }}</span></p>
+        <p><span class="label col-4">web:</span> <span class="value"><a href='{{ object.url }}' target="_blank">{{ object.url }}</a></span></p>
+        {% if object.activo.latitud %}
+            <p><span class="label col-4">Ubicación:</span> <span class="value"><a href='https://www.google.com/maps?q={{object.activo.DameLocalizacion}}' target="_blank">Ir</span></p>
+        {% endif %}
+        {% if not user.cliente %}
+
+            <a href="/linea/{{object.id}}/editar/" target='_blank'>
+                <button class='btn btn-success'>Editar ✏️</button>
+            </a>
+            <form method="post" enctype="multipart/form-data" id="uploadForm-activo" action='/activo/api/'>
+                {% csrf_token %}
+                <input type="number" name="cod_activo" style="display:none;" value="{{object.pk}}">
+                <div class='m-3'>
+                    <!-- Drag and Drop Area -->
+                    <div class="form-group">                        
+                        <label for="{{ form.fichero.id_for_label }}">Incorporar imagen</label>
+                        <div id="drop-area-activo" class="border border-dashed p-3 text-center" 
+                             ondrop="handleDrop(event)" ondragover="event.preventDefault()">
+                            <p>Arrastra y suelta la imagen aquí</p>
+                            <input type="file" id="fileElem-activo" name="fichero" accept="*" style="display:none;" onchange="submitForm()">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('fileElem-activo').click()">Seleccionar archivo</button>
+                            <p id="fileLabel-activo"></p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+        <div id='div_imagenes_activo'>
+            {% for imagen in imagenes %}
+                <div class='d-flex' style="margin-bottom: 10px;" id='div_imagen_{{imagen.pk}}'>
+                    <img src="{{imagen.imagen.url}}" class='col' style="max-width:300px; max-height: 180px; ">
+                    {% if not user.cliente %}
+                    <div class='col'>
+                        <button class='btn btn-danger' style="height: 30px; width: 30px; font-size: 12px;" onclick='EliminarImagenActivo({{imagen.pk}})'>X</button>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if not user.cliente %}
+            <hr>
+            <div hx-get="/activo/{{object.activo.id}}/ofertas/" hx-trigger="load" class='col-12' id='div_ofertas_activo'></div>
+        {% endif %}
+    </div>
+
+    <script type="text/javascript">
+        
+        async function submitForm() {
+            // Enviar el formulario automáticamente
+            const form = document.getElementById('uploadForm-activo');
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch("/activo/api/", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}' // Incluyendo el token CSRF en el encabezado para seguridad
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json(); // Supongo que tu backend devuelve JSON
+                    try {
+                        const hxResponse = await fetch("/activo/{{activo.id}}/");
+                        if (hxResponse.ok) {
+                            const content = await hxResponse.text(); // Obtener el HTML del response
+                            document.getElementById('body_activoModal').innerHTML = content; // Actualizar el target
+                        } else {
+                            showAlert('Error al hacer hx-get.', 'danger');
+                        }
+                    } catch (error) {
+                        showAlert('Error:', error, 'danger');
+                    }
+                } else {
+                    showAlert('Error al subir el archivo.', 'danger');
+                }
+            } catch (error) {
+                showAlert('Error al procesar la solicitud.', 'danger');
+            }
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('fileElem-activo');
+            const files = event.dataTransfer.files;
+
+            // Insertar el archivo en el input file y mostrar el nombre
+            if (files.length > 0) {
+                fileInput.files = files;
+                document.getElementById('fileLabel-activo').textContent = files[0].name;
+                submitForm(); // Enviar el formulario
+            }
+        }
+
+        function EliminarImagenActivo(idimagen){
+            if (confirm("¿Desea eliminar esta imagen?")){
+                const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+                const params = new URLSearchParams({
+                    accion:'eliminar_imagen',
+                    id_activo: '{{object.activo.pk}}',
+                    id_imagen: idimagen
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                            throw new Error('Error en la solicitud: ' + response.statusText);
+                        }
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if (data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            document.getElementById('div_imagen_'+ idimagen).remove()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+            }
+        }
+    </script>
+    
+{% endblock %}

@@ -1,0 +1,19 @@
+<h5>Comentarios para {{ linea }}</h5>
+
+{% for comentario in comentarios %}
+  <div class="mb-2">
+    <strong>{{ comentario.autor }}</strong>
+    <small>{{ comentario.creado_en|date:'d/m/Y H:i' }}</small><br />
+    {{ comentario.texto }}
+  </div>
+{% empty %}
+  <p>No hay comentarios aún.</p>
+{% endfor %}
+
+<hr />
+
+<form method="post" hx-post="{% url 'comentarios-modal' linea.id %}" hx-target="#body_comentarioModal" hx-swap="outerHTML">
+  {% csrf_token %}
+  <textarea name="texto" class="form-control" rows="3" placeholder="Escribe tu comentario..."></textarea>
+  <button type="submit" class="btn btn-primary mt-2">Guardar comentario</button>
+</form>

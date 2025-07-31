@@ -1,0 +1,152 @@
+<head>
+    <style>
+        body {
+            background-color: #999;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .register-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .register-container h1 {
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            color: #001a64;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #333;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 0.3rem;
+            padding: 0.6rem;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 0.6rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 0.3rem;
+        }
+
+        input:focus {
+            border-color: #001a64;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 26, 100, 0.2);
+        }
+
+        .btn-primary {
+            background-color: #001a64;
+            border: none;
+            border-radius: 0.3rem;
+            padding: 0.8rem;
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .invalid-feedback {
+            display: block;
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .form-text {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1rem;
+        }
+
+        .logo {
+            max-width: 160px;
+            display: block;
+            margin: 0 auto 1rem;
+        }
+    </style>
+</head>
+
+<div class="register-container">
+    <h1>Crear cuenta</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-group">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {{ form.username.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.nombre_completo.label_tag }}
+            {{ form.nombre_completo }}
+            {{ form.nombre_completo.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.telefono.label_tag }}
+            {{ form.telefono }}
+            {{ form.telefono.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+            {{ form.password1.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+            {{ form.password2.errors }}
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Registrarse</button>
+        <a href="{% url 'login' %}">Ya tengo una cuenta</a> <br>
+
+    </form>
+</div>

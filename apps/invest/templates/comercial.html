@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block style_css %}
+<style>
+    body {
+        background-color: #f1f4f9;
+    }
+
+    h2 {
+        color: #012060;
+        font-weight: 600;
+    }
+
+    .accordion-item {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        background-color: white;
+    }
+
+    .accordion-button {
+        background-color: #012060;
+        color: white;
+        font-weight: 500;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: #0149a0;
+        color: white;
+        box-shadow: none;
+    }
+
+    .accordion-body {
+        background-color: #f8f9fc;
+        padding: 1.5rem;
+    }
+
+    .form-check-label {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .table thead {
+        background-color: #012060;
+        color: white;
+    }
+
+    .btn-exportar {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        background-color: #012060;
+        color: white;
+        border: none;
+        border-radius: 4px;
+    }
+
+    .btn-exportar:hover {
+        background-color: #0149a0;
+    }
+
+    .check-icon {
+        font-size: 1.1rem;
+        color: green;
+        font-weight: bold;
+    }
+
+    .btn-vermas {
+        background-color: #dee2e6;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+    }
+
+    .btn-vermas:hover {
+        background-color: #ced4da;
+    }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid my-4">
+    <h2 class="mb-4">Activos Comerciales</h2>
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+        <div class="d-flex gap-3">
+            <div class="form-check">
+                <input class="form-check-input filtro-portal-global" type="checkbox" id="idealista_global">
+                <label class="form-check-label" for="idealista_global">Idealista</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input filtro-portal-global" type="checkbox" id="fotocasa_global">
+                <label class="form-check-label" for="fotocasa_global">Fotocasa PRO</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input filtro-portal-global" type="checkbox" id="web_invest_global">
+                <label class="form-check-label" for="web_invest_global">Web Invest</label>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Seleccionar Estados
+            </button>
+            <ul class="dropdown-menu p-3" style="max-height: 300px; overflow-y: auto;" id="dropdown-estados">
+                {% for estado, data in activos_por_estado.items %}
+                {% if estado != 'no publicado' %}
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input estado-checkbox" type="checkbox" value="{{ estado }}" id="estado_{{ estado }}" checked>
+                            <label class="form-check-label" for="estado_{{ estado }}">
+                                {{ estado|default:"Sin estado" }}
+                            </label>
+                        </div>
+                    </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+
+
+
+        <button class="btn btn-exportar" onclick="exportarPDFTodosEstados()">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar Todos los Estados
+        </button>
+    </div>
+    
+    <div class="accordion" id="accordionEstadosActivos">
+        {% for estado, data in activos_por_estado.items %}
+        <div class="accordion-item shadow-sm">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                <button class="accordion-button {% if not forloop.last %}collapsed{% endif %}" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                        aria-controls="collapse{{ forloop.counter }}">
+                    {{ estado|default:"Sin estado" }} 
+                    <span class="badge bg-light text-dark ms-2">{{ data.total }}</span>
+                </button>
+            </h2>
+            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.last %}show{% endif %}"
+                 aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#accordionEstadosActivos">
+                <div class="accordion-body">
+
+                    <!-- Filtros por portales -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-3">
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input filtro-portal" type="checkbox" value="idealista"
+                                       id="idealista_{{ forloop.counter }}">
+                                <label class="form-check-label" for="idealista_{{ forloop.counter }}">Idealista</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filtro-portal" type="checkbox" value="fotocasa_pro"
+                                       id="fotocasa_{{ forloop.counter }}">
+                                <label class="form-check-label" for="fotocasa_{{ forloop.counter }}">Fotocasa PRO</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filtro-portal" type="checkbox" value="web_invest"
+                                       id="web_invest_{{ forloop.counter }}">
+                                <label class="form-check-label" for="web_invest_{{ forloop.counter }}">Web Invest</label>
+                            </div>
+                        </div>
+                        {% if data.total < 10000 %}
+                        <button class="btn btn-exportar"
+                                onclick="exportarPDF('{{ estado }}', {{ forloop.counter }})">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tabla de activos -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha Perimetro</th>
+                                    <th>ID</th>
+                                    <th>Tipología</th>
+                                    <th>Clasificación</th>
+                                    <th>Dirección</th>
+                                    <th>Municipio</th>
+                                    <th>Provincia</th>
+                                    <th>Importe Deuda</th>
+                                    <th>Precio Compra</th>
+                                    <th>Fecha Estudio Posicion</th>
+                                    <th>Idealista</th>
+                                    <th>Fotocasa</th>
+                                    <th>Web Invest</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activo in data.activos %}
+                                <td>{{ activo.campanyalinea_set.first.campanya.fecha }}</td>
+                                    <td>{{ activo.id_proveedor }}</td>
+                                    <td>{{ activo.campanyalinea_set.first.tipo  }}</td>
+                                    <td>{{ activo.tipologia }}</td>
+                                    <td>{{ activo.catastro_localizacion|default:activo.direccion }}</td>
+                                    <td>{{ activo.poblacion }}</td>
+                                    <td>{{ activo.poblacion.provincia }}</td>
+                                    <td>{{ activo.campanyalinea_set.first.importe_deuda }}</td>
+                                    <td>{{ activo.campanyalinea_set.first.precio }}</td>
+                                    <td>{{ activo.fecha_estudio_posicion }}</td>
+                                    {% if activo.estado_activo == "publicado" or activo.estado_activo == "reservado" %}
+                                    <td>
+                                        <input type="checkbox" class="form-check-input toggle-checkbox" data-id="{{ activo.id }}" data-campo="idealista"
+                                            {% if activo.idealista %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input toggle-checkbox" data-id="{{ activo.id }}" data-campo="fotocasa_pro"
+                                            {% if activo.fotocasa_pro %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input toggle-checkbox" data-id="{{ activo.id }}" data-campo="web_invest"
+                                            {% if activo.web_invest %}checked{% endif %}>
+                                    </td>
+                                    {% else %}
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    {% endif %}
+                                    <td style="font-size: 14.5px;">
+                                        <a href="/linea/{{ activo.campanyalinea_set.first.id }}/editar/" target="_blank" class="btn" style="margin: 0; padding: 0; text-decoration: none;">
+                                            🔎
+                                        </a>
+                                    </td>
+                                    
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Botón ver más -->
+                    {% if data.has_more %}
+                        <form method="get" class="text-center mt-3">
+                            {% for other_estado, other_data in activos_por_estado.items %}
+                                {% if other_estado != estado and other_data.start %}
+                                    <input type="hidden" name="start_{{ other_estado }}" value="{{ other_data.start }}">
+                                {% endif %}
+                            {% endfor %}
+                            <input type="hidden" name="start_{{ estado }}" value="{{ data.start|add:'500' }}">
+                            <button type="submit" class="btn btn-vermas">Ver más activos</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function exportarPDF(estado, contador) {
+    const idealista = document.getElementById(`idealista_${contador}`).checked;
+    const fotocasa = document.getElementById(`fotocasa_${contador}`).checked;
+    const web_invest = document.getElementById(`web_invest_${contador}`).checked;
+    
+
+    const params = new URLSearchParams({
+        estado: estado,
+        idealista: idealista,
+        fotocasa_pro: fotocasa,
+        web_invest: web_invest
+    });
+
+    fetch(`/activo/api/?accion=imprimir_estado&${params.toString()}`)
+    .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                window.open(`/media/${data.nombrefichero}`, '_blank');
+            } else {
+                alert("Error: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error al generar PDF:", error);
+            alert("Error al generar el documento.");
+        });
+}   
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const checkboxes = document.querySelectorAll('.toggle-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            const activoId = this.dataset.id;
+            const campo = this.dataset.campo;
+            const valor = this.checked;
+
+            fetch(`/comercial/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    id: activoId,
+                    campo: campo,
+                    valor: valor
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'ok') {
+                    alert('Error al actualizar');
+                }
+            })
+            .catch(error => {
+                alert('Error de red al actualizar');
+                console.error(error);
+            });
+        });
+    });
+});
+
+
+function exportarPDFTodosEstados() {
+    const idealista = document.getElementById('idealista_global').checked;
+    const fotocasa = document.getElementById('fotocasa_global').checked;
+    const web_invest = document.getElementById('web_invest_global').checked;
+    const checkboxesMarcados = document.querySelectorAll('.estado-checkbox:checked');
+    const estadosSeleccionados = Array.from(checkboxesMarcados).map(cb => cb.value);
+
+    const params = new URLSearchParams();
+    params.append('idealista', idealista);
+    params.append('fotocasa_pro', fotocasa);
+    params.append('web_invest', web_invest);
+    estadosSeleccionados.forEach(estado => {
+        params.append('estados', estado);
+    });
+
+    fetch(`/activo/api/?accion=imprimir_estado&${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                window.open(`/media/${data.nombrefichero}`, '_blank');
+            } else {
+                alert("Error: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error al generar PDF:", error);
+            alert("Error al generar el documento.");
+        });
+}
+
+</script>
+{% endblock %}

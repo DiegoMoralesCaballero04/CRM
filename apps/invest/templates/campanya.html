@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style_css %} 
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-form {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            margin: auto;
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .card .label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .card .value {
+            font-weight: normal;
+            color: #333;
+        }
+
+        .edit-button {
+            position: absolute;
+            top: 40px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+        .edit-button:hover {
+            background-color: #357ab7;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .stats div {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stats div:not(:last-child) {
+            margin-right: 10px;
+        }
+
+        .stats .icon {
+            font-size: 24px;
+            color: #4a90e2;
+            margin-bottom: 5px;
+        }
+
+        .stats .label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stats .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+    </style>
+{% endblock %}
+
+{% block contenido %}
+    <div class="container" style="max-width: 1200px;">
+        <div class="table-actions">
+            <h1>Lista de campañas</h1>
+            <div class="dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Crear
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'crearcampanya' %}">Crear campaña</a></li>
+                <li><a class="dropdown-item" href="{% url 'crearproveedor' %}">Crear proveedor</a></li>
+                <li><a class="dropdown-item" href="{% url 'crearactivo' %}">Crear activo</a></li>
+              </ul>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <select id='s_proveedor_bcampanya' name='proveedor' class='col-12'>
+                    <option value=''>Proveedor</option>
+                    {% for proveedor in proveedores %}
+                        <option value='{{proveedor.pk}}'>{{ proveedor.codigo }}. {{ proveedor.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <select id='s_cartera_bcampanya' name='cartera' class='col-12'>
+                    <option value=''>Cartera</option>
+                    {% for cartera in carteras %}
+                        <option value='{{cartera.pk}}'>{{ cartera.codigo }}. {{ cartera.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <select id='s_tipo_bcampanya' name='tipo' class='col-12'>
+                    <option value=''>Tipo</option>
+                    <option value='NPL'>NPL</option>
+                    <option value='CDR'>CDR</option>
+                    <option value='REO'>REO</option>
+                </select>
+            </div>
+            <div class="col d-none">
+                <select id='s_estado_bcampanya' name='estado' class='col-12'>
+                    <option value='0'>Activas</option>
+                    <option value='1'>Finalizadas</option>
+                </select>
+            </div>
+            <div class="col ">
+                <input type="date" title='Desde' id='txt_desde_bcampanya' name='desde' class='col-12'>
+            </div>
+            <div class="col ">
+                <input type="date" title="Hasta" id='txt_hasta_bcampanya' name='hasta' class='col-12'>
+            </div>
+
+            <div class="col">
+                <button type="button" 
+                        class="btn btn-primary" 
+                        title="Me interesa" 
+                        hx-get="/campanya/listar/"
+                        hx-target="#div_listado_campanya"
+                        hx-include="#s_proveedor_bcampanya, #s_cartera_bcampanya, #s_tipo_bcampanya, #s_estado_bcampanya, #s_estado_bcampanya, #txt_desde_bcampanya, #txt_hasta_bcampanya" 
+                        hx-trigger="click">
+                        Filtrar
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <div id='div_listado_campanya'>
+        <div hx-get="/campanya/listar/" hx-trigger="load" class='col-12'></div>
+    </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script type="text/javascript">
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        const proveedorSelect = document.getElementById("s_proveedor_bcampanya");
+        const carteraSelect = document.getElementById("s_cartera_bcampanya");
+    
+        proveedorSelect.addEventListener("change", function() {
+            const proveedorId = this.value;
+            if (proveedorId) {
+                fetch(`{% url 'apicampanya' %}?proveedor=${proveedorId}&accion=cargar_carteras_old`)
+                    .then(response => response.json())
+                    .then(data => {
+                        carteraSelect.innerHTML = '<option value="">---------</option>';
+                        data.forEach(function(cartera) {
+                            const option = document.createElement("option");
+                            option.value = cartera.id;
+                            option.textContent = cartera.codigo + ". " + cartera.nombre;
+                            carteraSelect.appendChild(option);
+                        });
+                    })
+                    showAlert("Error al cargar carteras:"+ error, 'danger')
+                    .catch(error => console.error("Error al cargar carteras:", error));
+            } else {
+                // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+                let option;
+                carteraSelect.innerHTML = '<option value="">---------</option>';
+            }
+        });
+    });
+
+    function ActualizarDatosCampanyaDesdeExcel(id_campanya){
+        if (confirm('¿Estás seguro de que deseas actualizar esta campaña?' + id_campanya)){
+            const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+                const params = new URLSearchParams({
+                    accion:'actualizar_campanya_desde_excel',
+                    id_campanya
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                            throw new Error('Error en la solicitud: ' + response.statusText);
+                        }
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if (data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            window.reload()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+        }
+    }
+    function scrollToElement(id_elemento) {
+        const element = document.getElementById(id_elemento);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+            });
+        }
+    }
+
+    function EliminarCampanya(id_campanya){
+        if (confirm('¿Estás seguro de que deseas eliminar esta campaña?')){
+            const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+                const params = new URLSearchParams({
+                    accion:'eliminar_campanya',
+                    id_campanya
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                            throw new Error('Error en la solicitud: ' + response.statusText);
+                        }
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if (data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            document.getElementById("tr_campanya" + id_campanya).remove()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+        }
+    }
+
+
+</script>
+{% endblock %}

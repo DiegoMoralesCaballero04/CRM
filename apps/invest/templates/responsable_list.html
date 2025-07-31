@@ -1,0 +1,126 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+    
+{% block contenido %}
+
+    <div class='mb-4'>
+        <div class="row">
+            <div class='col'>
+                <h1>Responsables</h1> 
+            </div>
+        </div>
+    <div>
+
+
+
+    <div class="table-responsive col-6">
+
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Apellidos</th>
+                    <th scope="col">Correo electrónico</th>
+                    <th scope="col">Usuario</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for responsable in object_list %}
+                    <tr>
+                        <td>{{ responsable.nombre }}</td>
+                        <td>{{ responsable.apellidos }}</td>
+                        <td>{{ responsable.correo_acceso }}</td>
+                        <td>{{ responsable.correo_envio }}</td>
+                        <td>
+                            {% if responsable.usuario %}
+                                {{ responsable.nombre }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'editarresponsable' responsable.pk %}" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            &nbsp;&nbsp;&nbsp;
+                            <a href="{% url 'eliminarresponsable' responsable.pk %}" title="Anular">
+                                <i class="bi bi-x-circle-fill text-danger"></i>
+                            </a>
+                            {% if user.is_superuser %}
+                                &nbsp;&nbsp;&nbsp;
+                                {% if responsable.DameUsuarioPK %}
+                                    <button type="button" class="btn btn-warning" onclick='AbrirModalCambioClave({{responsable.DameUsuarioPK }})'>Cambio de clave</button>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a class="btn btn-primary" href="{% url 'crearresponsable' %}" role="button">Añadir responsable</a>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="cambioclaveModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambio de clave</h5>
+                    <input type="number" id="idusuario_cambioclaveModal" class='d-none'>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_cambioclaveModal'>
+                    <div class="mb-3">
+                        <label for="clave_new" class="form-label">Nueva clave</label>
+                        <input type="password" class="form-control" id="clave_new" name="clave_new" placeholder="Introduce la nueva clave">
+                    </div>
+                    <div class="mb-3">
+                        <label for="clave_new2" class="form-label">Repita la nueva clave</label>
+                        <input type="password" class="form-control" id="clave_new2" name="clave_new2" placeholder="Repita la nueva clave">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id='btn_guardar' onclick='CambiarClave()'>Cambiar Clave</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+
+        function AbrirModalCambioClave(idusuario){
+            document.getElementById('idusuario_cambioclaveModal').value=idusuario
+            var modal = new bootstrap.Modal(document.getElementById('cambioclaveModal'));
+            modal.show();
+        }
+
+        function CambiarClave(){
+            let idusuario=document.getElementById('idusuario_cambioclaveModal').value
+            fetch('/usuario/' + idusuario + '/', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 
+                    idusuario: idusuario,
+                    clave_new:document.getElementById("clave_new").value, 
+                    clave_new2: document.getElementById("clave_new2").value }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error){
+                    showAlert(data.literror, 'danger');
+                }else{
+                    window.location.reload()
+                }
+            })
+            .catch((error) => {
+                showAlert('Error: ' + error, 'danger');
+            });
+        }
+    </script>
+{% endblock %}

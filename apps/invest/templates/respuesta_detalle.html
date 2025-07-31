@@ -1,0 +1,35 @@
+<div class="correo-detalle">
+    <h4>{{ respuestacorreo.asunto }}</h4>
+    
+    <div class="correo-metadata">
+        <p><strong>De:</strong> {{ respuestacorreo.remitente }}</p>
+        <p><strong>Para:</strong> {{ respuestacorreo.correo.from_email }}</p>
+        <p><strong>Fecha:</strong> {{ respuestacorreo.fecha }}</p>
+    </div>
+    
+    <hr>
+    
+    <div class="correo-body">
+        {{ respuestacorreo.cuerpo|safe }}
+    </div>
+
+    <div class="correo-body">
+        {{ respuestacorreo.correo.body|safe }}
+    </div>
+</div>
+
+<style>
+    .correo-detalle {
+        padding: 15px;
+    }
+    .correo-metadata {
+        color: #666;
+        margin-bottom: 15px;
+    }
+    .correo-body {
+        white-space: pre-wrap;  # Mantiene el formato original del texto
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+    }
+</style>

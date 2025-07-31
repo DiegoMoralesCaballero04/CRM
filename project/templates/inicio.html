@@ -1,0 +1,637 @@
+{% extends 'base.html' %}
+{% block contenido %}
+<style>
+    /* ---- GENERAL ---- */
+    div input {
+        background-color: #e8e0e0;
+    }
+    
+
+    
+    {% if user.cliente %}
+        /* ---- TARJETAS ---- */
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        flex: 1 1 180px;
+        max-width: 220px;
+        min-width: 160px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card .icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+    
+    .card .label {
+        font-size: 14px;
+        font-weight: bold;
+        color: #666;
+    }
+    
+    .card .value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #012060;
+        margin-top: 5px;
+    }
+     /* ---- TABLAS Y UTILIDADES ---- */
+     tr.no_disponible td { color: red; }
+     .fijoabajo { position: fixed; bottom: 0; right: 0; z-index: 150; }
+     .resaltado { font-size: 24pt; }
+     .izquierda { text-align: left; }
+     .derecha { text-align: right; }
+     .centrado { text-align: center; }
+     .sinpadding { padding: 0px; }
+    
+
+     /* ---- COLORES POR ESTADO ---- */
+    .estado-I .icon { color: #28a745; }   /* Interesados */
+    .estado-E .icon { color: #ffc107; }   /* Esperando */
+    .estado-R .icon { color: #fd7e14; }   /* Reservadas */
+    .estado-X .icon { color: #dc3545; }   /* No concretadas */
+    .estado-V .icon { color: #198754; }   /* Aceptadas */
+    .estado-P .icon { color: #0d6efd; }   /* Preparadas */
+
+    .banner-reservas {
+        background: linear-gradient(90deg, #012060, #003580);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 12px 20px;
+        text-align: center;
+        border-radius: 8px;
+        margin: 20px auto;
+        width: fit-content;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    {% endif %}
+    
+    /* ---- COLORES POR ESTADO ---- */
+    .estado-I .icon { color: #28a745; }   /* Interesados */
+    .estado-E .icon { color: #ffc107; }   /* Esperando */
+    .estado-R .icon { color: #fd7e14; }   /* Reservadas */
+    .estado-X .icon { color: #dc3545; }   /* No concretadas */
+    .estado-V .icon { color: #198754; }   /* Aceptadas */
+    .estado-P .icon { color: #0d6efd; }   /* Preparadas */
+    
+    @media (max-width: 768px) {
+        .stats {
+            display: block;
+            text-align: center;
+        }
+        .card {
+            max-width: 100%;
+            margin: 10px auto;
+        }
+    }
+    
+    /* ---- TABLAS Y UTILIDADES ---- */
+    tr.no_disponible td { color: red; }
+    .fijoabajo { position: fixed; bottom: 0; right: 0; z-index: 150; }
+    .resaltado { font-size: 24pt; }
+    .izquierda { text-align: left; }
+    .derecha { text-align: right; }
+    .centrado { text-align: center; }
+    .sinpadding { padding: 0px; }
+
+    .banner-reservas {
+        background: linear-gradient(90deg, #012060, #003580);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 12px 20px;
+        text-align: center;
+        border-radius: 8px;
+        margin: 20px auto;
+        width: fit-content;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    
+    </style>
+	<div class='container' style="max-width: 1200px;">
+		<input type="number" id="txt_cliente_seleccionado" class='d-none'>
+		<h1 class='text-center'>Bienvenido/a {{user.username|title}} a la aplicación de gestión de activos del Grupo MSS</h1>
+	    <div class="stats">
+		    {% if not user.cliente %}
+
+	            <a href="/campanya/" style="text-decoration: none;">
+	            	<div class="card">
+		                <div class="icon">📑</div>
+		                <div class="label">Campañas activas</div>
+		                <div class="value">{{ GRANT CONNECT ON DATABASE crm_invest TO crmg_smss2425;
+                        }}</div>
+	            	</div>
+	            </a>
+	            <a href="/activo/" style="text-decoration: none;">
+		            <div class="card">
+		                <div class="icon">🏘</div>
+		                <div class="label">Activos totales</div>
+		                <div class="value">{{ NumActivos }}</div>
+		            </div>
+		        </a>
+		        <a href="/propuestas/" style="text-decoration: none;">
+		            <div class="card">
+			            <div class="icon">📄</div>
+		                <div class="label">Propuestas enviadas</div>
+		                <div class="value">{{ NumPropuestas }}</div>
+		            </div>
+		        </a>
+	        {% else %}
+
+	            <div class="card" style="cursor: pointer;"  hx-get="/propuestas/listado/" hx-trigger="click" hx-target="#listado_propuestas">
+		            <div class="icon">📄</div>
+	                <div class="label">Propuestas recibidas</div>
+	                <div class="value">{{ NumPropuestas }}</div>
+	            </div>
+	        {% endif %}
+	        {% if not user.cliente %}
+	            <a href="/propuestas/" style="text-decoration: none;">
+		            <div class="card" style="cursor: pointer;"  onclick='SeleccionarLineas("","")'>
+			            <div class="icon">📋</div>
+		                <div class="label">Activos propuestos</div>
+		                <div class="value">{{ NumPropuestas_activos }}</div>
+		            </div>
+		        </a>
+		        <a href="/propuestas/" style="text-decoration: none;">
+		        	<div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','I')">
+			            <div class="icon">✅</div>
+		                <div class="label">Activos seleccionados</div>
+		                <div class="value">{{ NumPropuestas_Interesadas }}</div>
+		            </div>
+		        </a>
+		        
+	        {% else %}
+	        	<div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','I,E')">
+		            <div class="icon">✅</div>
+	                <div class="label">Activos seleccionados / recopilando más información</div>
+	                <div class="value">{{ NumPropuestas_InteresadasoEsperando }}</div>
+	            </div>
+		    {% endif %}
+	        {% if not user.cliente %}
+            <a href="/propuestas/" style="text-decoration: none;">
+	            <div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','E')">
+		            <div class="icon">⏱</div>
+	                <div class="label">Activos esperando info de los servicers</div>
+	                <div class="value">{{ NumPropuestas_Esperando }}</div>
+	            </div>
+	        </a>
+	        <a href="/propuestas/" style="text-decoration: none;">
+            	<div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','P')">
+	                <div class="icon">🧑‍💻</div>
+	                <div class="label">Propuestas enviadas a clientes</div>
+	                <div class="value">{{ NumPropuestas_Preparadas }}</div>
+	            </div>
+            </a>
+            {% else %}
+	            <a href="#" style="text-decoration: none;">
+		            <div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','P,R')">
+				        <div class="icon">🧑‍💻</div>
+		                <div class="label">Propuestas esperando su confirmación</div>
+		                <div class="value">{{ NumPropuestas_Preparadas }}</div>
+		            </div>
+	            </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','X')">
+                        <div class="icon">❌</div>
+                        <div class="label">Propuestas NO Concretadas</div>
+                        <div class="value">{{ NumPropuestas_No_Concretados }}</div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer;"  onclick="SeleccionarLineas('','V')">
+                        <div class="icon">💵</div>
+                        <div class="label">Propuestas aceptadas</div>
+                        <div class="value">{{ NumPropuestas_Vendidos }}</div>
+                    </div>
+                </a>
+	       	{% endif %}
+            
+        </div>
+
+        {% if not user.cliente %}
+        <!-- DASHBOARD DE ESTADÍSTICAS -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="label">Distribución de activos por tipología</div>
+                    <canvas id="graficoActivosTipologia" style="height: 300px;"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="label">Evolución de campañas por mes</div>
+                    <canvas id="graficoEvolucionCampanyas" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="label">Activos por provincia</div>
+                    <canvas id="graficoActivosProvincia" style="height: 300px;"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="label">Propuestas generadas vs aceptadas por mes</div>
+                    <canvas id="graficoPropuestasGeneradasAceptadas" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card mt-4">
+                    <div class="label">Calendario de propuestas</div>
+                    <div id="calendarioDashboard" style="padding: 1em; background-color: white;"></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id='listado_propuestas' class='col-lg-12'></div>
+
+    <div class="modal fade" id="activoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle del activo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_activoModal'>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+{% load static %}
+<script src="{% static 'js/propuestas.js' %}"></script>
+
+<script>
+	function SeleccionarLineas(id_cliente, estado){
+		document.getElementById("txt_cliente_seleccionado").value=id_cliente
+		console.log("SeleccionarLineas")
+        const baseUrl = '{{RUTA_PROYECTO}}/propuestas/api/';
+        const params = new URLSearchParams({
+            accion:'dame_propuestas_detalle',
+            cliente: id_cliente,
+            estado: estado
+        });
+        const url = `${baseUrl}?${params.toString()}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+            }
+        };
+        fetch(url, options)
+            .then(response => {return response.json();})
+            .then(data => {
+                console.log(data)
+                document.getElementById("listado_propuestas").innerHTML = "";	                
+				document.getElementById("listado_propuestas").insertAdjacentHTML("beforeend", data.html_completo);
+
+            })
+            .catch(error => {
+                console.error('Error en el fetch:', error);
+            });
+    }
+
+    function obtenerTextoLabel(checkbox) {
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        return label ? label.textContent.trim() : "";
+    }
+
+/*INTERESADO*/
+	function SeleccionarTodosActivosI() {
+        const elementosActivos = document.querySelectorAll('input[name="c_sel_activoI"]');
+        const todosActivosCheckeado = document.getElementById('c_sel_todos_activosI').checked;
+        elementosActivos.forEach(elemento => {
+            if (elemento.checked != todosActivosCheckeado){
+                elemento.checked = todosActivosCheckeado;
+                elemento.dispatchEvent(new Event('change'));
+            }
+        });
+        actualizarResumenModalActivoI()
+    }
+    function actualizarResumenModalActivoI(){
+        const checkboxes = document.querySelectorAll("input[name='c_sel_activoI']");
+        const resumenContainer = document.getElementById("propuestasSeleccionadas");
+        const resumenText = document.getElementById("resumenPropuestas");
+        const seleccionados = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked) // Solo los checkboxes marcados
+            .map(checkbox => obtenerTextoLabel(checkbox)); // Obtener el texto del <label>
+
+        if (seleccionados.length > 0) {
+            resumenText.innerHTML = `${seleccionados.length} posiciones seleccionadas`; //: <strong>${seleccionados.join(", ")}</strong>
+            resumenContainer.style.display = "block";
+        } else {
+            resumenContainer.style.display = "none"; // Ocultar si no hay seleccionados
+            resumenText.innerHTML = "";
+        }
+    }
+    function pedirInformacionServicer(){
+        
+        const lineas = document.querySelectorAll('input[name="c_sel_activoI"]:checked');
+        const lineasSeleccionadas = []
+        lineas.forEach(elemento => {
+            lineasSeleccionadas.push(elemento.value);
+        })
+        const lineasStr = lineasSeleccionadas.join(',');
+
+
+        fetch('/activo/api/', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ accion:'pedir_info_servicers', lineas_id: lineasStr }),
+        })
+            .then(data => {
+                window.location.reload()
+            })
+            .catch(error => {
+                console.error('Error en el fetch:', error);
+            });
+    }
+
+/*ESPERANDO*/
+    function Activo_Preparado(propuestalinea_id, linea_id, activo_id){
+        const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+        const params = new URLSearchParams({
+            accion:'activopreparado',
+            propuestalinea_id: propuestalinea_id,
+            linea:linea_id,
+            activo:activo_id
+        });
+        const url = `${baseUrl}?${params.toString()}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+            }
+        };
+        fetch(url, options)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud: ' + response.statusText);
+                }
+                return response.json(); // Convertimos la respuesta a JSON
+            })
+            .then(data => {
+                if(data.error){
+                    MostrarAlertaError(data.literror)
+                }else{
+                    const boton = document.querySelector('#td_bot_preparado_'+ propuestalinea_id + ' button');
+                    const textoBoton = boton.textContent;
+                    const label = document.createElement('label');
+                    label.textContent = "Preparado";
+                    label.style.cssText = 'color: green; font-weight: bold;';
+                    boton.parentNode.replaceChild(label, boton);
+
+                	// let id_cliente=document.getElementById("txt_cliente_seleccionado").value
+                	// SeleccionarLineas(id_cliente, "E")
+                }
+            })
+            .catch(error => {
+                console.error('Error en el fetch:', error);
+            });
+    }
+
+    function Activo_Reservado(propuestalinea_id, linea_id, activo_id){
+        console.log("dentro")
+        const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+        const params = new URLSearchParams({
+            accion:'activoreservado',
+            propuestalinea_id:propuestalinea_id,
+            linea:linea_id,
+            activo:activo_id
+        });
+        const url = `${baseUrl}?${params.toString()}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+            }
+        };
+        fetch(url, options)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud: ' + response.statusText);
+                }
+                return response.json(); // Convertimos la respuesta a JSON
+            })
+            .then(data => {
+                if(data.error){
+                    MostrarAlertaError(data.literror)
+                }else{
+                    const boton = document.querySelector('#td_bot_preparado_'+ propuestalinea_id + ' button');
+                    const textoBoton = boton.textContent;
+                    const label = document.createElement('label');
+                    label.textContent = "Reservado";
+                    label.style.cssText = 'color: green; font-weight: bold;';
+                    boton.parentNode.replaceChild(label, boton);
+
+                    // let id_cliente=document.getElementById("txt_cliente_seleccionado").value
+                    // SeleccionarLineas(id_cliente, "E")
+                }
+            })
+            .catch(error => {
+                console.error('Error en el fetch:', error);
+            });
+    }
+
+    function SeleccionarTodosActivosE() {
+    	console.log("SeleccionarTodosActivosE")
+        const elementosActivos = document.querySelectorAll('input[name="c_sel_activoE"]');
+        const todosActivosCheckeado = document.getElementById('c_sel_todos_activosE').checked;
+        elementosActivos.forEach(elemento => {
+            if (elemento.checked != todosActivosCheckeado){
+                elemento.checked = todosActivosCheckeado;
+                elemento.dispatchEvent(new Event('change'));
+            }
+        });
+        actualizarResumenModalActivoE()
+    }
+    function actualizarResumenModalActivoE(){
+        const checkboxes = document.querySelectorAll("input[name='c_sel_activoE']");
+        const resumenContainer = document.getElementById("propuestasSeleccionadas");
+        const resumenText = document.getElementById("resumenPropuestas");
+        const seleccionados = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked) // Solo los checkboxes marcados
+            .map(checkbox => obtenerTextoLabel(checkbox)); // Obtener el texto del <label>
+
+        if (seleccionados.length > 0) {
+            resumenText.innerHTML = `${seleccionados.length} posiciones seleccionadas`; //: <strong>${seleccionados.join(", ")}</strong>
+            resumenContainer.style.display = "block";
+        } else {
+            resumenContainer.style.display = "none"; // Ocultar si no hay seleccionados
+            resumenText.innerHTML = "";
+        }
+    }
+
+    function enviarInformacionCliente(){        
+        const lineas = document.querySelectorAll('input[name="c_sel_activoE"]:checked');
+        const lineasSeleccionadas = []
+        lineas.forEach(elemento => {
+            lineasSeleccionadas.push(elemento.value);
+        })
+        const lineasStr = lineasSeleccionadas.join(',');
+
+
+        fetch('/activo/api/', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ accion:'enviar_info_clientes', lineas_id: lineasStr }),
+        })
+            .then(data => {
+                let id_cliente=document.getElementById("txt_cliente_seleccionado").value
+                SeleccionarLineas(id_cliente, "E")
+            })
+            .catch(error => {
+                console.error('Error en el fetch:', error);
+            });
+    }
+
+    let calendarioDashboard = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        iniciarCalendario();
+        iniciarGraficoActivosTipologia();
+        iniciarGraficoEvolucionCampanyas();
+        iniciarGraficoActivosProvincia();
+        iniciarGraficoPropuestasGeneradasAceptadas();
+    });
+
+    function iniciarCalendario() {
+        const calendarEl = document.getElementById('calendarioDashboard');
+        if (!calendarEl) return;
+
+        if (calendarioDashboard && typeof calendarioDashboard.destroy === 'function') {
+            calendarioDashboard.destroy();
+        }
+
+        calendarioDashboard = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            height: 500,
+            events: {{ eventos_json|safe }}
+        });
+
+        calendarioDashboard.render();
+    }
+
+    function iniciarGraficoActivosTipologia() {
+        const ctx = document.getElementById('graficoActivosTipologia');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ ActivoTiposLabels|safe }},
+                datasets: [{
+                    data: {{ ActivoTiposDatos|safe }},
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    function iniciarGraficoEvolucionCampanyas() {
+        const ctx = document.getElementById('graficoEvolucionCampanyas');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ CampanyasMesLabels|safe }},
+                datasets: [{
+                    label: 'Campañas creadas',
+                    data: {{ CampanyasMesDatos|safe }},
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+
+    function iniciarGraficoActivosProvincia() {
+        const ctx = document.getElementById('graficoActivosProvincia');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ ActivosProvinciaLabels|safe }},
+                datasets: [{
+                    label: 'Activos',
+                    data: {{ ActivosProvinciaDatos|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function iniciarGraficoPropuestasGeneradasAceptadas() {
+        const ctx = document.getElementById('graficoPropuestasGeneradasAceptadas');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ PropuestasMesLabels|safe }},
+                datasets: [
+                    { label: 'Generadas', data: {{ PropuestasGeneradas|safe }}, borderWidth: 2 },
+                    { label: 'Aceptadas', data: {{ PropuestasAceptadas|safe }}, borderWidth: 2 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+    
+{% block contenido %}
+
+    <div class='mb-4'>
+        <div class="row">
+            <div class='col'>
+                <h1>Servicers</h1> 
+            </div>
+        </div>
+    <div>
+
+    <div class="col-12 d-flex">
+        <div class="col-1"></div>
+        <div class="table-responsive col-10">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" colspan="3">Servicer</th>
+                        <th scope="col">Cartera</th>
+                        <th scope="col">Contacto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proveedor in object_list %}
+                        <tr>
+                            <td>{{ proveedor.codigo }}</td>
+                            <td>{{ proveedor.nombre }}</td>
+                            <td>
+                                <a href="{% url 'editarproveedor' proveedor.pk %}" title="Editar">
+                                    <i class="bi bi-pencil"></i>                        
+                                </a>
+                                <a href="{% url 'eliminarproveedor' proveedor.pk %}" class="text-danger" title="Eliminar" aria-label="Eliminar">
+                                    <i class="bi bi-x-circle-fill rojo"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <table class='table'>
+                                    <tbody>
+                                        {% for cartera in proveedor.DameCarteras %}
+                                            <tr>
+                                                <td></td>
+                                                <td>{{cartera.codigo}}</td>
+                                                <td>{{cartera.nombre}}</td>
+                                                <td>
+                                                    <a href="{% url 'editarcartera' cartera.proveedor.pk cartera.pk %}" class="text-primary me-2" title="Editar" aria-label="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="{% url 'eliminarcartera' cartera.proveedor.pk cartera.pk %}" class="text-danger" title="Eliminar" aria-label="Eliminar" onclick="return confirm('¿Estás seguro de que desea eliminar esta cartera?');">
+                                                        <i class="bi bi-x-circle-fill"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <a href="{% url 'crearcartera' proveedor.pk %}" class="text-success" title='Crear nuevo contacto'>
+                                    <i class="bi bi-plus-circle verde" title='Crear nuevo contacto'></i>
+                                </a>
+
+                            </td>
+                            <td>
+                                <table class='table'>
+                                    <tbody>
+                                        {% for contacto in proveedor.DameContactos %}
+                                            <tr>
+                                                <td></td>
+                                                <td>{{contacto.nombre}}</td>
+                                                <td>{{contacto.correo}}</td>
+                                                <td>{{contacto.telefono}}</td>
+                                                <td>{{contacto.cargo}}
+                                                    {% if contacto.NPL %}
+                                                        <label style="background-color: green;border-radius: 7px;padding: 12px;color: white;font-weight: bold;">NPL</label>
+                                                    {% endif %}
+                                                    {% if contacto.CDR %}
+                                                        <label style="background-color: blue;border-radius: 7px;padding: 12px;color: white;font-weight: bold;">CDR</label>
+                                                    {% endif %}
+                                                    {% if contacto.REO %}
+                                                        <label style="background-color: orange;border-radius: 7px;padding: 12px;color: white;font-weight: bold;">REO</label>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'editarcontacto' contacto.proveedor.pk contacto.pk %}" class="text-primary me-2" title="Editar" aria-label="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="{% url 'eliminarcontacto' contacto.proveedor.pk contacto.pk %}" class="text-danger" title="Eliminar" aria-label="Eliminar" onclick="return confirm('¿Estás seguro de que desea eliminar este contacto?');">
+                                                        <i class="bi bi-x-circle-fill"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <a href="{% url 'crearcontacto' proveedor.pk %}" class="text-success" title='Crear nuevo contacto'>
+                                    <i class="bi bi-plus-circle verde"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a class="btn btn-primary" href="{% url 'crearproveedor' %}" role="button">Añadir servicer</a>
+        </div>
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,1271 @@
+{% extends 'base_htmx.html' %}
+
+{% block contenido %}
+    <input type="number" id="txt_micampanya_activos" value='{{micampanya_id}}' class='d-none'>
+    <input type="text" id="txt_miclasif_activos" value='{{miclasif}}' class='d-none'>
+    <input type="number" id="txt_migrupo_activos" value='{{migrupo_id}}' class='d-none'>
+    <input type="number" id="txt_mitipo_activos" value='{{mitipo_id}}' class='d-none'>
+    <input type="number" id="txt_mipoblacion_activos" value='{{mipoblacion_id}}' class='d-none'>
+    <input type="text" id="txt_miprovincia_activos" value='{{miprovincia_id}}' class='d-none'>
+    <div class="container" style="max-width:100%">
+        <div class="table-actions">
+            <h1>Lista de activos <span style='border:1px solid #5eda6e;border-radius:15px;padding: 10px;background-color: #009513;color: white;'>{{num_activos}}</span></h1>
+            <div class="btn-group d-none" role="group" aria-label="Basic radio toggle button group">
+                <input type="radio" class="btn-check" name="bot_accion" id="bot_accion_seleccionar" autocomplete="off" {{selected_iniciar}}>
+                <label class="btn btn-outline-dark" for="bot_accion_seleccionar">Seleccionar</label>  
+            </div>
+            <button class='btn btn-secondary' onclick='ActualizaDatosCatastro()' id='bot_catastro_activo_list'>Actualiza Datos Catastro</button>
+            <button class='btn btn-primary' data-bs-toggle="modal" data-bs-target="#propuestaModal"><i class="bi bi-envelope"></i> Enviar propuestas</button>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#propuestaModalWhatsapp">
+                <i class="bi bi-whatsapp"></i> Enviar por WhatsApp
+            </button>            
+            <button class='btn btn-success' onclick='ImprimirActivos(false)' id='bot_imprimir_activo_list'><i class="bi bi-printer"></i> Imprimir</button>
+            <button class='btn btn-warning' onclick='ImprimirActivos(true)' id='bot_excel_activo_list'><i class="bi bi-file-earmark-excel"></i> Excel</button>
+            <button class="btn btn-info" onclick="verMapaActivos()">
+                <i class="bi bi-geo-alt-fill"></i> Ver Mapa
+            </button>
+            
+        </div>
+        <div class='d-flex'>
+            <div hx-get="/misclientes/" hx-trigger="load" class='d-none' id='div_clientes'></div>
+            <div  scope='col' class="table-responsive" class='col-12' id='div_activos'>                
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" name='col_seleccionar'>
+                                <input type="checkbox" id='c_sel_todos_activos' onclick='SeleccionarTodosActivos()' title='Seleccionar todos'>
+                            </th>
+                            <th scope="col" style="font-size: 14px;">
+                                Cartera
+                            </th>
+                            <th scope="col" style="font-size: 14px;">
+                                Fecha
+                            </th>                            
+                            <th scope="col" style="font-size: 14.5px;">
+                                Id
+                            </th>      
+                            <th scope="col" style="font-size: 14.5px;">Ref catastral</th>                        
+                            <th scope="col" style="font-size: 14.5px;">
+                                Clasif
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{miclasif}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-trigger="click" hx-target="#listado_activos"> Todas</a></li>
+                                    {% for clasif in clasificaciones %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&clasif={{clasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}"  hx-trigger="click" hx-target="#listado_activos">{{ clasif }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            </th>
+                           <!-- <th scope="col">
+                                Grupo
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{migrupo_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&tipo={{mitipo}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-trigger="click" hx-target="#listado_activos"> Todas</a></li>
+                                    {% for grupo in grupos %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&clasif={{miclasif}}&grupo={{grupo.pk}}&tipo={{mitipo}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}"  hx-trigger="click" hx-target="#listado_activos">{{ grupo.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            </th> -->
+                            <th scope="col" style="font-size: 14px;">
+                                Tipología                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{mitipo_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&grupo={{migrupo_id}}&tipo=all&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-trigger="click" hx-target="#listado_activos"> Todas</a></li>
+                                    {% for tipo in tipos %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{tipo.id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}"  hx-trigger="click" hx-target="#listado_activos">{{ tipo.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            </th>
+                            <th scope="col" style="font-size: 14px;">
+                                Detalle
+                            </th> 
+                            <th scope="col" style="font-size: 14.5px;">
+                                 Ref UE
+                            </th>
+                            <th scope="col" style="font-size: 14.5px;">Dirección</th>
+                            <th scope="col" style="font-size: 14px;">Población
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{mipoblacion_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&poblacion=all&provincia={{miprovincia_id}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}" hx-trigger="click" hx-target="#listado_activos"> Todas</a></li>
+                                    {% for poblacion in poblaciones %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{poblacion.id}}"  hx-trigger="click" hx-target="#listado_activos">{{ poblacion.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            </th>
+                            <th scope="col" style="font-size: 14px;">
+                                Provincia
+                                <div class="dropdown" name="filtro_dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">
+                                        {{miprovincia_nombre}}
+                                    </button>
+                                    <div class="dropdown-menu" style="padding: 10px;">
+                                        <!-- Botón para aplicar los filtros -->
+                                        <form id="provincia-form" hx-get="/activo/listar/" hx-target="#listado_activos">
+                                            <!-- Agregar casillas de verificación para cada provincia -->
+                                            <input type="number" class='d-none' name='campanya' value='{{campanya_id}}'>
+                                            <input type="number" class='d-none' name='clasif' value='{{miclasif}}'>
+                                            <input type="number" class='d-none' name='grupo' value='{{migrupo_id}}'>
+                                            <input type="number" class='d-none' name='tipo' value='{{mitipo_id}}'>
+                                            <input type="number" class='d-none' name='poblacion' value='{{mipoblacion_id}}'>
+                                            <div>
+                                                <label>
+                                                    <input type="checkbox" name="provincia" value="all"> Todas
+                                                </label>
+                                            </div>
+                                            {% for provincia in provincias %}
+                                            <div>
+                                                <label>
+                                                    <input type="checkbox" name="provincia" value="{{ provincia.id }}"> {{ provincia.nombre }}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                            <!-- Botón para aplicar el filtro -->
+                                            <button type="submit" class="btn btn-primary btn-sm mt-2">Aplicar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </th>
+
+                            <!-- <th scope="col">
+                                Provincia 
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{miprovincia_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&poblacion={{mipoblacion_id}}&provincia=all" hx-trigger="click" hx-target="#listado_activos"> Todas</a></li>
+                                    {% for provincia in provincias %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/activo/listar/?campanya={{campanya_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{provincia.id}}&poblacion={{mipoblacion_id}}" hx-trigger="click" hx-target="#listado_activos">{{ provincia.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            </th> -->
+                            <th scope="col" class="text-end">Precio</th>
+                            <th scope="col" class="text-end">Deuda</th>
+                            <th scope="col">Observaciones</th>
+                            <!-- <th scope="col">Ofrecido</th> -->
+                            <th scope="col"></th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linea in lineas %}
+                        
+                            <tr name='tr_resultado' id='tr_resultado{{linea.pk}}' class='{% if linea.activo.no_disponible %}no_disponible{% endif %}'>
+                                <td name='col_seleccionar' >
+                                    {% if not linea.activo.no_disponible %}                                
+                                        <input type="checkbox" name="c_sel_activo" value='{{linea.pk}}' id='c_sel_activo{{linea.pk}}'>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 14px;">{{ linea.campanya.cartera.codigo }}</td>
+                                <td style="font-size: 14x;">{{ linea.campanya.fecha|date:"d/m/Y" }}</td>
+                                <td style="font-size: 14.5px;">{{ linea.activo.id_proveedor }}</td>
+                                <td style="max-width: 190px; font-size: 16px;">{{ linea.activo.ref_catastral }}</td>
+                                <td style="font-size: 14px;">{{ linea.tipo }}</td>
+                                <td style="font-size: 14px;">{% if not linea.activo.tipologia.grupo.nombre %}
+                                        <button class='btn btn-warning' onclick='AbrirModificarTipoVarios({{linea.activo.pk}})'>
+                                            Modificar
+                                        </button>    
+                                    {% endif %}
+                                    
+                                    {{ linea.activo.tipologia.subgrupo.nombre }}
+
+                                </td>
+                                <td style="font-size: 14.5px;">{{ linea.activo.tipologia.nombre }}</td> 
+                                <td style="max-width: 190px; font-size: 14.5px;">{{ linea.activo.ref_ue }}</td>
+                                <td  style="font-size: 14.5px;">{{ linea.activo.direccion }}</td>
+                                <td style="font-size: 14px;">{{ linea.activo.poblacion }}
+                                    {% if linea.activo.poblacion.provincia.es_varios %}
+                                        <button class='btn btn-warning' onclick='AbrirModificarPoblacionVarios({{linea.activo.pk}})'>Modificar</button>    
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 14px;">{{ linea.activo.poblacion.provincia }}</td>
+                                <td class="text-end">{% if linea.precio %}{{ linea.precio | floatformat:"g" }}{% endif %}</td>
+                                <!--<td> {{linea.importe_deuda}} </td>-->
+                               <td style="text-align: right;">    
+                                {% if linea.tipo == "NPL" %}
+                                    {% if linea.importe_deuda and linea.importe_deuda != 0 %}
+                                        {{ linea.importe_deuda|floatformat:2 }}
+                                    {% else %}
+                                        Sin información, preguntar fondo
+                                    {% endif %}
+                                {% endif %}
+                            
+                                </td>
+                                <td style="font-size: 14.5px;"> {{linea.DameObservaciones}}</td>
+
+                                <!-- <td style="text-align: center;" id='td_ofrecido_a_{{linea.pk}}'> <span>{{ linea.DameOfertasNombre }}</span> -->
+                                </td>
+                                <td style="font-size: 14.5px;">
+                                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#activoModal" style="margin: 0px; padding:0px;">
+                                        <a href="#" hx-get="/linea/{{linea.id}}/" hx-target="#body_activoModal" style="text-decoration: none;">
+                                        🔎
+                                        </a>               
+                                    </button>       
+                                </td>
+                                <td>
+                                    {% if not linea.activo.no_disponible %}
+                                        <button type="button" class="btn" style="margin: 0px; padding:0px;" title="No disponible" onclick="Activo_no_disponible({{linea.id}},{{linea.activo.id}})">
+                                            <i class="bi bi-x-circle-fill rojo"></i>
+                                        </button>       
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+
+<!-- Modal -->
+    <div class="modal fade" id="activoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle del activo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_activoModal'>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- Modal -->
+    <div class="modal fade" id="propuestaModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xxl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Propuesta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_propuestaModal'>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="filtroClientes" class="form-label">Filtrar por nombre de cliente:</label>
+                            <input type="text" id="filtroClientesCorreo" class="form-control" onkeyup="filtrarClientes('filtroClientesCorreo', 'tablaClientesCorreo')">
+                        </div>
+                        <div id="clientesSeleccionados" class="alert alert-info" style="display: none;">
+                            <strong>Clientes seleccionados:</strong>
+                            <span id="resumenClientes"></span>
+                        </div>
+                        <label>Seleccione los clientes a quien enviar la propuesta:</label>
+                            <table class="table table-striped" id="tablaClientesCorreo">
+                            <thead><tr><th></th><th>Nombre</th><th>Zona</th><th>Observaciones</th></tr></thead>
+                            <tbody>
+                        {% for cliente in clientes %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="c_nombre_cliente_modalpropuesta" value='{{cliente.id}}' id='c_nombre_cliente_modalpropuesta{{cliente.id}}' onchange="actualizarResumenModalPropuesta()">
+                                </td>
+                                <td>
+                                    <label for='c_nombre_cliente_modalpropuesta{{cliente.id}}'>{% if cliente.nombrecompleto %}{{cliente.nombrecompleto}}{% else %}{{cliente.nombre}}{{cliente.apellidos}}{% endif %}</label>
+                                </td>
+                                <td>
+                                    {{cliente.zona}}
+                                </td>
+                                <td>
+                                    <p>{{cliente.observaciones}}</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="enviarPropuestas()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Modal -->
+    <div class="modal fade" id="propuestaModalWhatsapp" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xxl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Propuesta por WhatsApp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_propuestaModal'>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="filtroClientesWhastsapp" class="form-label">Filtrar por nombre de cliente:</label>
+                            <input type="text" id="filtroClientesWhatsapp" class="form-control" onkeyup="filtrarClientes('filtroClientesWhatsapp', 'tablaClientesWhatsapp')">
+                        </div>
+                        <div id="clientesSeleccionados" class="alert alert-info" style="display: none;">
+                            <strong>Clientes seleccionados:</strong>
+                            <span id="resumenClientes"></span>
+                        </div>
+                        <label>Seleccione los clientes a quien enviar la propuesta:</label>
+                        <table class="table table-striped" id="tablaClientesWhatsapp">
+                            <thead><tr><th></th><th>Nombre</th><th>Zona</th><th>Observaciones</th></tr></thead>
+                            <tbody>
+                            {% for cliente in clientes %}
+                                {% if cliente.telefono %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="c_nombre_cliente_modalpropuesta" value='{{cliente.id}}' id='c_nombre_cliente_modalpropuesta{{cliente.id}}' onchange="actualizarResumenModalPropuesta()">
+                                    </td>
+                                    <td>
+                                        <label for='c_nombre_cliente_modalpropuesta{{cliente.id}}'>{% if cliente.nombrecompleto %}{{cliente.nombrecompleto}}{% else %}{{cliente.nombre}}{{cliente.apellidos}}{% endif %}</label>
+                                    </td>
+                                    <td>
+                                        {{cliente.zona}}
+                                    </td>
+                                    <td>
+                                        <p>{{cliente.observaciones}}</p>
+                                    </td>
+                                    <td>
+                                        <p>{{cliente.telefono}}</p>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="enviarWhatsApp()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="activo_cambiopoblacion_Modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambio de población del activo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id='btn_cerrar_activo_cambiopoblacion_Modal'></button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12 mb-3 text-center">
+                        <label>Nombre de la población a cambiar:</label><label id='lbl_nombrepoblacion_modal'></label>
+                        <label id='lbl_idpoblacion_modal' class='d-none'></label>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="provincia_modal_cambiopob" class="form-label">Provincia</label>
+                        <select class="form-select" id="provincia_modal_cambiopob">
+                            {% for provincia in provincias_todas %}
+                                <option value="{{provincia.pk}}">{{provincia.nombre}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="poblacion_modal_cambiopob" class="form-label">Población</label>
+                        <select class="form-select" id="poblacion_modal_cambiopob">
+                            <option value="{{linea.activo.poblacion.pk }}">
+                                {{linea.activo.poblacion.nombre }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick='ModificarPoblacionVarios()'>Modificar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="activo_cambiotipologia_Modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambio de tipologia del activo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id='btn_cerrar_activo_cambiotipologia_Modal'></button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12 mb-3 text-center">
+                        <label>Nombre de la tipología a cambiar:</label><label id='lbl_nombretipologia_modal'></label>
+                        <label id='lbl_idtipo_modal' class='d-none'></label>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="tipo" class="form-label">Tipo</label>
+                        <select class="form-select" id="tipo">
+                            {% for tipo in tipo_todas %}
+                                <option value="{{tipo.pk}}">{{tipo.nombre}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="tipologia" class="form-label">Tipología</label>
+                        <select class="form-select" id="tipologia">
+                            <option value="{{linea.activo.tipologia.pk }}">
+                                {{linea.activo.tipologia.nombre }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick='ModificarTipologiaVarios()'>Modificar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<a id="btn_whatsapp" class="d-none" target="_blank"></a>
+
+<div class="modal fade" id="mapaActivosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Mapa de activos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="mapa" style="height: 600px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script>
+        
+        // Escucha el evento 'hidden.bs.modal' de Bootstrap
+        document.addEventListener("DOMContentLoaded", function() {
+            const modal = document.getElementById('activoModal');
+            if (modal) {
+                modal.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('body_activoModal').innerHTML = '';
+                });
+            }
+        });
+
+
+        var botonesAccion = document.getElementsByName("bot_accion");
+        botonesAccion.forEach(boton => {
+            boton.addEventListener('change', () => {
+                // Obtenemos la etiqueta del botón seleccionado
+                const etiqueta = boton.nextElementSibling;
+                // Mostramos una alerta con el texto de la etiqueta
+
+                const elementosSeleccionar = document.getElementsByName("col_seleccionar");
+                const elementosReferenciaOfrecer = document.getElementsByName("col_referencia_ofrecer");
+                const filasSeleccionadas = document.getElementsByName('tr_resultado');
+                const div_clientes = document.getElementById('div_clientes');
+                const div_activos = document.getElementById('div_activos');
+                if (!div_clientes.classList.contains("d-none")){
+                    div_clientes.classList.remove("col-3")
+                    div_clientes.classList.add("d-none")
+                    div_activos.classList.remove("col-9")
+                }
+                if (etiqueta.textContent =='Seleccionar'){
+
+                    elementosSeleccionar.forEach(elemento => {
+                        if (elemento.classList.contains("d-none")){
+                            elemento.classList.remove("d-none")
+                        }})
+                    filasSeleccionadas.forEach(row => {
+                        row.style.display = 'table-row'; // Mostrar fila
+                    });
+                    elementosReferenciaOfrecer.forEach(elemento => {
+                        if (!elemento.classList.contains("d-none")){
+                            elemento.classList.add("d-none")
+                        }})
+
+                }else{
+                    if (etiqueta.textContent=='Ofrecer'){
+                        if (div_clientes.classList.contains("d-none")){
+                            div_clientes.classList.add("col-3")
+                            div_clientes.classList.remove("d-none")
+                            div_activos.classList.add("col-9")
+                        }
+                    }
+                    elementosSeleccionar.forEach(elemento => {
+                        if (!elemento.classList.contains("d-none")){
+                            elemento.classList.add("d-none")
+                        }})
+                    filasSeleccionadas.forEach(row => {
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        if (checkbox.checked) {
+                            row.style.display = 'table-row'; // Mostrar fila
+                        } else {
+                            row.style.display = 'none'; // Ocultar fila
+                        }
+                    });
+                    elementosReferenciaOfrecer.forEach(elemento => {
+                        if (elemento.classList.contains("d-none")){
+                            elemento.classList.remove("d-none")
+                        }})
+
+                }
+                
+            });
+        });
+        botonesAccion.forEach(boton => {
+          if (boton.checked) {
+            boton.dispatchEvent(new Event('change'))
+          }
+        });
+
+        function SeleccionarTodosActivos() {
+            const elementosActivos = document.querySelectorAll('input[name="c_sel_activo"]');
+            const todosActivosCheckeado = document.getElementById('c_sel_todos_activos').checked;
+            elementosActivos.forEach(elemento => {
+                if (elemento.checked != todosActivosCheckeado){
+                    elemento.checked = todosActivosCheckeado;
+                    elemento.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        function SeleccionarTodosOfrecer(){
+            const todosActivosCheckeado = document.getElementById('c_sel_todosoferta_activos').checked;
+
+            const visibleRows = document.querySelectorAll('tr[name="tr_resultado"]:not([style*="display: none"])');
+
+            visibleRows.forEach(row => {
+                const inputs = row.querySelectorAll('input[name="c_sel_ofrecer"]');
+                inputs.forEach(elemento => {
+                    if (elemento.checked != todosActivosCheckeado){
+                        elemento.checked = todosActivosCheckeado;
+                        elemento.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+        }
+
+        function ImprimirActivos(es_excel=false){
+            const msgEsperando = document.getElementById("msgesperando");
+            let check = [];
+            document.querySelectorAll("td[name='col_seleccionar'] input[type='checkbox']:checked").forEach(checkbox => {
+                check.push(checkbox.value)
+            });
+            if (msgEsperando) {
+                msgEsperando.classList.remove("d-none");
+            }
+            let campanya=document.getElementById("lbl_idcampanya").innerHTML
+            if (campanya!=""){
+                campanya=document.getElementById("txt_micampanya_activos").value
+            }
+            const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+            const lineas_id = check.join(",");
+            const params = new URLSearchParams({
+                accion:'imprimir_activos',
+                estado: obtenerEstadoSeleccionado(),
+                campanya,
+                clasif: document.getElementById("txt_miclasif_activos").value,
+                grupo: document.getElementById("txt_migrupo_activos").value,
+                tipo: document.getElementById("txt_mitipo_activos").value,
+                poblacion: document.getElementById("txt_mipoblacion_activos").value,
+                provincia: document.getElementById("txt_miprovincia_activos").value,
+                lineas_id: lineas_id,
+                es_excel:es_excel
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (msgEsperando) {
+                        msgEsperando.classList.add("d-none");
+                    }
+                    if (!response.ok) {
+                        showAlert('Error en la solicitud: ' + response.message, 'danger');
+                        throw new Error('Error en la solicitud: ' + response.message);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    if (data.status === "error") {
+                        showAlert("Error al generar documento: " + data.message, "danger");
+                        console.error("Error del backend:", data.message);
+                    } else {
+                        window.open('{{RUTA_PROYECTO}}/media/' + data.nombrefichero);
+                    }
+                })
+                .catch(error => {
+                    if (msgEsperando) {
+                        msgEsperando.classList.add("d-none");
+                    }
+                    console.error('Error en el fetch:', error);
+                });
+                //return '{{RUTA_PROYECTO}}/media/' + data.nombrefichero;
+        }
+
+        function obtenerEstadoSeleccionado() {
+            const radios = document.querySelectorAll('input[name="bot_accion"]');
+            for (let radio of radios) {
+                if (radio.checked) {
+                    const label = document.querySelector(`label[for="${radio.id}"]`);
+                    return label.textContent;
+                }
+            }
+            return null;
+        }
+
+
+
+        function enviarPropuestas() {
+            const clientes = document.querySelectorAll('input[name="c_nombre_cliente_modalpropuesta"]:checked');
+            const clientesSeleccionados = [];
+            clientes.forEach(elemento => {
+                clientesSeleccionados.push(elemento.value);
+            });
+            const clientesStr = clientesSeleccionados.join(',');
+        
+            let lineas = document.querySelectorAll('input[name="c_sel_activo"]:checked');
+        
+            // Si no hay ninguna línea seleccionada, selecciona todas
+            if (lineas.length === 0) {
+                lineas = document.querySelectorAll('input[name="c_sel_activo"]');
+            }
+        
+            const lineasSeleccionadas = [];
+            lineas.forEach(elemento => {
+                lineasSeleccionadas.push(elemento.value);
+            });
+            const lineasStr = lineasSeleccionadas.join(',');
+        
+            const msgEsperando = document.getElementById("msgesperando");
+            if (msgEsperando) {
+                msgEsperando.classList.remove("d-none");
+            }
+        
+            fetch('/activo/api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ accion: 'enviar_propuesta', clientes_id: clientesStr, lineas_id: lineasStr }),
+            })
+            .then(data => {
+                if (msgEsperando) {
+                    msgEsperando.classList.add("d-none");
+                }
+        
+                let modalElemento = document.getElementById('propuestaModal');
+                let modal = bootstrap.Modal.getInstance(modalElemento);
+                modal.hide();
+        
+                let td_ofrecido = "";
+                const activos = document.querySelectorAll('input[name="tr_resultado"]');
+                activos.forEach(elemento => {
+                    td_ofrecido = document.getElementById('td_ofrecido_a_' + elemento.value);
+                    const valor = td_ofrecido.innerHTML;
+                    td_ofrecido.innerHTML = valor + " " + "Enviada propuesta";
+                });
+        
+                const checkboxes = document.querySelectorAll("input[name='c_nombre_cliente_modalpropuesta']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                const checkAll = document.getElementById("c_sel_todos_activos");
+                checkAll.checked = false;
+        
+                const resumenContainer = document.getElementById("clientesSeleccionados");
+                if (resumenContainer) {
+                    resumenContainer.style.display = "none";
+                    document.getElementById("resumenClientes").innerHTML = "";
+                }
+        
+                const checkboxes_activo = document.querySelectorAll("input[name='c_sel_activo']");
+                checkboxes_activo.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+        
+            })
+            .catch(error => {
+                if (msgEsperando) {
+                    msgEsperando.classList.add("d-none");
+                }
+                showAlert('Error en el fetch:', error, 'danger');
+            });
+        }
+        
+    
+    function enviarWhatsApp() {
+        const clientes = document.querySelectorAll('input[name="c_nombre_cliente_modalpropuesta"]:checked');
+        const clientesSeleccionados = []
+        clientes.forEach(elemento => {
+            clientesSeleccionados.push(elemento.value);
+        })
+        if (clientesSeleccionados.length === 1) {
+            const clienteId = clientesSeleccionados[0];
+            
+            fetch(`/cliente/api/?id=${clienteId}&accion=dame_telefono`, {
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                if (data.telefono) {
+                    const textoOriginal = data.telefono;
+                    const regex = /(?:\d[\s\-]?){9,}/g;
+                    const coincidencias = textoOriginal.match(regex) || [];
+
+                    const telefonos = coincidencias
+                        .map(t => t.replace(/\D/g, '').slice(-9))
+                        .filter(t => t.length === 9);
+
+                    if (telefonos.length === 0) {
+                        showAlert("No se encontraron números de teléfono válidos.", 'danger');
+                        return;
+                    }
+                    alert("Recuerda descargar el informe para poder adjuntarlo al cliente.");
+
+                    if (telefonos.length === 1) {
+                        const telefono = "34" + telefonos[0]; 
+                        const mensaje = encodeURIComponent("Hola, le envío la propuesta que hemos preparado para usted.");
+                        const url = `https://wa.me/${telefono}?text=${mensaje}`;
+                        document.getElementById("btn_whatsapp").href = url;
+                        document.getElementById("btn_whatsapp").click();
+                    } else {
+                        const opciones = telefonos.map((t, i) => `${i + 1}. ${t}`).join('\n');
+                        const eleccion = prompt(
+                            `Se encontraron varios teléfonos en el campo:\n\n${textoOriginal}\n\nElige un número:\n${opciones}`
+                        );
+
+                        const index = parseInt(eleccion) - 1;
+                        if (!isNaN(index) && telefonos[index]) {
+                            const telefono = "34" + telefonos[index];
+                            const mensaje = encodeURIComponent("Hola, le envío la propuesta que hemos preparado para usted.");
+                            const url = `https://wa.me/${telefono}?text=${mensaje}`;
+                            document.getElementById("btn_whatsapp").href = url;
+                            document.getElementById("btn_whatsapp").click();
+                        } else {
+                            showAlert("Selección inválida o cancelada.", 'danger');
+                        }
+                    }
+                } else {
+                    showAlert("Este cliente no tiene un teléfono disponible para WhatsApp.", 'warning');
+                }
+            });
+        } else {
+            showAlert('Elige solo un cliente.', 'warning');
+        }
+    }
+
+
+    function filtrarClientes(idInput, idTabla) {
+        const filtro = document.getElementById(idInput).value.toLowerCase();
+        const filas = document.querySelectorAll(`#${idTabla} tbody tr`);
+
+        filas.forEach(fila => {
+            const nombre = fila.querySelector("td:nth-child(2)").textContent.toLowerCase();
+            fila.style.display = nombre.includes(filtro) ? "" : "none";
+        });
+    }
+
+
+    function obtenerTextoLabel(checkbox) {
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        return label ? label.textContent.trim() : "";
+    }
+
+    function actualizarResumenModalPropuesta() {
+        const checkboxes = document.querySelectorAll("input[name='c_nombre_cliente_modalpropuesta']");
+        const resumenContainer = document.getElementById("clientesSeleccionados");
+        const resumenText = document.getElementById("resumenClientes");
+        const seleccionados = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked) // Solo los checkboxes marcados
+            .map(checkbox => obtenerTextoLabel(checkbox)); // Obtener el texto del <label>
+
+        if (seleccionados.length > 0) {
+            resumenText.innerHTML = `${seleccionados.length} cliente(s) seleccionados: <strong>${seleccionados.join(", ")}</strong>`;
+            resumenContainer.style.display = "block";
+        } else {
+            resumenContainer.style.display = "none"; // Ocultar si no hay seleccionados
+            resumenText.innerHTML = "";
+        }
+    }
+
+
+
+
+    function x_enviarPropuestas() {
+        if (clientes.length > 0) {
+
+            const activos = document.querySelectorAll('input[name="c_sel_activo"]:checked');
+            const activosSeleccionados = []
+            activos.forEach(elemento => {
+                activosSeleccionados.push(elemento.value);
+            })
+            if (activosSeleccionados.length > 0) {
+
+                fetch('/activo/api/', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ accion:'enviar_propuesta', clientes: clientes, lineas: activosSeleccionados }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showAlert('Propuestas enviadas exitosamente', 'success');
+                    // Limpiar la lista y el array de clientes
+                    clientes = [];
+                    document.getElementById('listaClientes').innerHTML = '';
+                })
+                .catch((error) => {
+                    showAlert('Error:', error, 'danger');
+                });
+            } else {
+                showAlert('Debe seleccionar algún activo.', 'warning');
+            }
+        } else {
+            showAlert('No hay clientes seleccionados para enviar.', 'warning');
+        }
+    }
+    function Activo_no_disponible(linea_id, activo_id){
+        if (confirm("¿Desea poner como no disponible este activo?")){
+            const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+            const params = new URLSearchParams({
+                accion:'activonodisponible',
+                linea:linea_id,
+                activo:activo_id
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    if(data.error){
+                        showAlert(data.literror, 'danger');
+                    }else{
+                        document.getElementById("tr_resultado" + linea_id).classList.add("no_disponible")
+                        document.getElementById("c_sel_activo" + linea_id).classList.add("d-none")
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+        }
+    }
+    function ActualizaDatosCatastro(){
+        const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+            const params = new URLSearchParams({
+                accion:'actualiza_datos_catastro',
+                id_campanya: document.getElementById("txt_micampanya_activos").value,                
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    showAlert("Datos actualizados", 'success');
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+    }
+
+    function AbrirModificarPoblacionVarios(id_activo){
+        const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+            const params = new URLSearchParams({
+                accion:'ver_poblacion_activo',
+                id_activo
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    document.getElementById("lbl_nombrepoblacion_modal").innerText=data.poblacion
+                    document.getElementById("lbl_idpoblacion_modal").innerText=data.poblacion_id
+                    var modal = new bootstrap.Modal(document.getElementById('activo_cambiopoblacion_Modal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+    }
+
+    
+
+    function ModificarPoblacionVarios(){
+        let nombre_poblacion=document.getElementById("lbl_nombrepoblacion_modal").innerText
+        let id_poblacion_old=document.getElementById("lbl_idpoblacion_modal").innerText
+        let id_poblacion_new=document.getElementById("poblacion_modal_cambiopob").value 
+
+        const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+            const params = new URLSearchParams({
+                accion:'modificar_poblacion_activo',
+                id_poblacion_old,
+                id_poblacion_new
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    if (data.error){
+                        showAlert(data.literror, 'danger');
+                    }else{
+                        let div = document.getElementById("div_activos");
+                        if (!div) return;
+                        
+                        let filas = div.getElementsByTagName("tr");
+                        for (let fila of filas) {
+                            let celdas = fila.getElementsByTagName("td");
+                            for (let celda of celdas) {
+                                if (celda.innerText.includes(nombre_poblacion)) {
+                                    celda.innerText = celda.innerText.replace(nombre_poblacion, "modificado");
+                                }
+                            }
+                        }
+                        document.getElementById('btn_cerrar_activo_cambiopoblacion_Modal').click()
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+    }
+    
+    const provinciaSelect_modal_1 = document.getElementById("provincia_modal_cambiopob");
+    const municipioSelect_modal_1 = document.getElementById("poblacion_modal_cambiopob");
+
+    provinciaSelect_modal_1.addEventListener("change", function() {
+        const provinciaId = this.value;
+        if (provinciaId) {
+            fetch(`{% url 'apicampanya' %}?provincia=${provinciaId}&accion=cargar_poblaciones_old`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpiar las opciones de cartera
+                    municipioSelect_modal_1.innerHTML = '<option value="">---------</option>';
+                    // Agregar las nuevas opciones de cartera
+                    data.forEach(function(poblacion) {
+                        const option = document.createElement("option");
+                        option.value = poblacion.id;
+                        option.textContent = poblacion.nombre;
+                        municipioSelect_modal_1.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error al cargar carteras:", error));
+        } else {
+            // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+            let option;
+            municipioSelect_modal_1.innerHTML = '<option value="">---------</option>';
+        }
+    });
+
+
+
+    function AbrirModificarTipoVarios(id_activo){
+        const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+            const params = new URLSearchParams({
+                accion:'ver_tipologia_activo',
+                id_activo
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    document.getElementById("lbl_nombrepoblacion_modal").innerText=data.poblacion
+                    document.getElementById("lbl_idpoblacion_modal").innerText=data.poblacion_id
+                    var modal = new bootstrap.Modal(document.getElementById('activo_cambiopoblacion_Modal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+    }
+    
+    function ModificarPoblacionVarios(){
+        let nombre_poblacion=document.getElementById("lbl_nombrepoblacion_modal").innerText
+        let id_poblacion_old=document.getElementById("lbl_idpoblacion_modal").innerText
+        let id_poblacion_new=document.getElementById("poblacion").value 
+
+        const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+            const params = new URLSearchParams({
+                accion:'modificar_poblacion_activo',
+                id_poblacion_old,
+                id_poblacion_new
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    if (data.error){
+                        showAlert(data.literror, 'danger');
+                    }else{
+                        let div = document.getElementById("div_activos");
+                        if (!div) return;
+                        
+                        let filas = div.getElementsByTagName("tr");
+                        for (let fila of filas) {
+                            let celdas = fila.getElementsByTagName("td");
+                            for (let celda of celdas) {
+                                if (celda.innerText.includes(nombre_poblacion)) {
+                                    celda.innerText = celda.innerText.replace(nombre_poblacion, "modificado");
+                                }
+                            }
+                        }
+                        document.getElementById('btn_cerrar_activo_cambiopoblacion_Modal').click()
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+    }
+    
+    const provinciaSelect = document.getElementById("provincia");
+    const municipioSelect = document.getElementById("poblacion");
+
+    provinciaSelect.addEventListener("change", function() {
+        const provinciaId = this.value;
+        if (provinciaId) {
+            fetch(`{% url 'apicampanya' %}?provincia=${provinciaId}&accion=cargar_poblaciones_old`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpiar las opciones de cartera
+                    municipioSelect.innerHTML = '<option value="">---------</option>';
+                    // Agregar las nuevas opciones de cartera
+                    data.forEach(function(poblacion) {
+                        const option = document.createElement("option");
+                        option.value = poblacion.id;
+                        option.textContent = poblacion.nombre;
+                        municipioSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error al cargar carteras:", error));
+        } else {
+            // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+            let option;
+            municipioSelect.innerHTML = '<option value="">---------</option>';
+        }
+    });
+    function actualizarTipologias(){
+        const checkboxes = document.querySelectorAll("#grupo_bactivo .form-check-input");
+        gruposSeleccionados = [];
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                gruposSeleccionados.push(checkbox.value);
+            }
+        });
+        const gruposSeleccionadosStr = gruposSeleccionados.join(',');
+        fetch(`{% url 'apicampanya' %}?grupo=${gruposSeleccionadosStr}&accion=cargar_subgrupos`)
+            .then(response => response.json())
+            .then(data => {
+                tipo_bactivo.innerHTML=data.html
+            })
+            .catch(error => console.error("Error al cargar tipologias:", error));
+    }
+
+
+// Función para obtener el valor de una cookie por nombre
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        function verMapaActivos(es_excel = false) {
+            console.log("verMapaActivos");
+            const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+            console.log(baseUrl);
+            let check = [];
+            document.querySelectorAll("td[name='col_seleccionar'] input[type='checkbox']:checked").forEach(checkbox => {
+                check.push(checkbox.value)
+            });
+            let lineas_id = check.join(",");
+            if(lineas_id == ""){
+                check = [];
+                document.querySelectorAll("td[name='col_seleccionar'] input[type='checkbox']:not(:checked)").forEach(checkbox => {
+                    check.push(checkbox.value)
+                    lineas_id = check.join(",");
+                });
+            }
+            const params = new URLSearchParams({
+                accion:'mapa_activos',
+                estado: obtenerEstadoSeleccionado(),
+                campanya: document.getElementById("txt_micampanya_activos").value,
+                clasif: document.getElementById("txt_miclasif_activos").value,
+                grupo: document.getElementById("txt_migrupo_activos").value,
+                tipo: document.getElementById("txt_mitipo_activos").value,
+                poblacion: document.getElementById("txt_mipoblacion_activos").value,
+                provincia: document.getElementById("txt_miprovincia_activos").value,
+                lineas_id: lineas_id,
+                es_excel:es_excel
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    //if (msgEsperando) {
+                    //    msgEsperando.classList.add("d-none");
+                    //}
+                    //if (!response.ok) {
+                    //    showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                    //    throw new Error('Error en la solicitud: ' + response.statusText);
+                    //}
+                    mostrarMapaConActivos(response); // Convertimos la respuesta a JSON
+                })
+                .catch(error => {
+                    if (msgEsperando) {
+                        msgEsperando.classList.add("d-none");
+                    }
+                    console.error('Error en el fetch:', error);
+                });
+        }
+
+        function mostrarMapaConActivos(response) {
+            response.json().then(data => {
+                if (!data || !Array.isArray(data.activos)) {
+                    showAlert("No se encontraron coordenadas válidas para mostrar en el mapa.", 'warning');
+                    return;
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('mapaActivosModal'));
+                modal.show();
+
+                setTimeout(() => {
+                    const contenedorMapaPadre = document.querySelector("#mapaActivosModal .modal-body");
+
+                    const mapaAntiguo = document.getElementById("mapa");
+                    if (mapaAntiguo) {
+                        mapaAntiguo.remove();
+                    }
+
+                    const nuevoDivMapa = document.createElement("div");
+                    nuevoDivMapa.id = "mapa";
+                    nuevoDivMapa.style.height = "600px";
+                    contenedorMapaPadre.appendChild(nuevoDivMapa);
+
+                    const mapa = L.map('mapa').setView([40.4168, -3.7038], 6);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 18,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(mapa);
+
+                    const grupoMarkers = L.featureGroup();
+
+                    data.activos.forEach(activo => {
+                        if (activo.lat && activo.lon) {
+                            const marker = L.marker([activo.lat, activo.lon])
+                                .bindPopup(`
+                                <a href="/linea/${activo.linea}/editar" target="_blank">
+                                    <b>ID:</b> ${activo.id}<br></a>
+                                    <b>Dirección:</b> ${activo.direccion}<br>
+                                    <b>Población:</b> ${activo.poblacion}
+                            `);
+                            grupoMarkers.addLayer(marker);
+                        }
+                    });
+
+                    grupoMarkers.addTo(mapa);
+                    if (grupoMarkers.getLayers().length > 0) {
+                        mapa.fitBounds(grupoMarkers.getBounds(), { padding: [20, 20] });
+                    }
+
+                }, 500); 
+            });
+        }
+
+        
+    </script>
+{% endblock %}

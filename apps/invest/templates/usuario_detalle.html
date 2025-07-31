@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block style_css %} 
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-form {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            margin: auto;
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .card .label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .card .value {
+            font-weight: normal;
+            color: #333;
+        }
+
+        .edit-button {
+            position: absolute;
+            top: 40px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+
+        .div_acciones {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .div_acciones div {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stats div:not(:last-child) {
+            margin-right: 10px;
+        }
+
+        
+
+    </style>
+{% endblock %}
+{% block contenido %}
+    <div class="container">
+
+    <div class="card">
+        <h2>Información del usuario</h2>
+        <p><span class="label">Usuario:</span> <span class="value">{{ object.username }}</span></p>
+
+        <div class="div_acciones">
+            <div>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#cambioclaveModal">Cambio de clave</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="cambioclaveModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambio de clave</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_cambioclaveModal'>
+                    <form method="post" id='form_cambiar_clave'>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="clave_old" class="form-label">Clave actual</label>
+                            <input type="password" class="form-control" id="clave_old" name="clave_old" placeholder="Introduce la clave actual">
+                        </div>
+                        <div class="mb-3">
+                            <label for="clave_new" class="form-label">Nueva clave</label>
+                            <input type="password" class="form-control" id="clave_new" name="clave_new" placeholder="Introduce la nueva clave">
+                        </div>
+                        <div class="mb-3">
+                            <label for="clave_new2" class="form-label">Repita la nueva clave</label>
+                            <input type="password" class="form-control" id="clave_new2" name="clave_new2" placeholder="Repita la nueva clave">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id='btn_guardar'>Cambiar Clave</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        
+        document.getElementById('form_cambiar_clave').addEventListener('submit', function(event) {
+            
+            event.preventDefault();
+            fetch('/usuario/{{object.pk}}/', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json()) 
+            .then(data => {
+                if (data.error){
+                    showAlert(data.literror, 'danger');
+                }else{
+                    window.location.replace("/")
+                }
+            })
+            .catch(error => showAlert('Error: ' + error, 'danger'));
+        });
+    </script>
+{% endblock %}

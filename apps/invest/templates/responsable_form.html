@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+<!-- {-% load crispy_forms_tags %-} -->
+
+
+{% block contenido %}
+<div class="d-flex">
+    <div class="col-8">
+        <h1>{% if object %}Editar responsable {{object}} {% else %}Añadir responsable{% endif %} </h1>
+        <form method="post">
+            {% csrf_token %}
+                <!-- {-% crispy form %-} -->
+            <div class='m-3'>
+            {% bootstrap_form form %}
+            {% bootstrap_button button_type="submit" content="Guardar" %}
+            </div>
+        </form>
+    </div>
+    <div class="col-4">
+        <a href="/cliente/"><button class='btn btn-secondary'>Volver a clientes</button></a>
+    </div>
+</div>
+<div  class='col-12' hx-get="/responsable/" hx-trigger="load"></div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+
+        function AbrirModalCambioClave(idusuario){
+            document.getElementById('idusuario_cambioclaveModal').value=idusuario
+            var modal = new bootstrap.Modal(document.getElementById('cambioclaveModal'));
+            modal.show();
+        }
+
+        function CambiarClave(){
+            let idusuario=document.getElementById('idusuario_cambioclaveModal').value
+            fetch('/usuario/' + idusuario + '/', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 
+                    idusuario: idusuario,
+                    clave_new:document.getElementById("clave_new").value, 
+                    clave_new2: document.getElementById("clave_new2").value }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error){
+                    showAlert(data.literror, 'danger');
+                }else{
+                    window.location.reload()
+                }
+            })
+            .catch((error) => {
+                showAlert('Error: ' + error, 'danger');
+            });
+        }
+    
+    </script>
+{% endblock %}

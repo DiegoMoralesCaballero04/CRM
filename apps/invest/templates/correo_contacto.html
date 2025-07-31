@@ -1,0 +1,116 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+
+{% block contenido %}
+    <input type="number" id="txt_micliente_correo" value='{{ micliente }}' class='d-none'>
+    <div class="container col-12">
+        <div class="table-actions col-12 d-flex">
+            <h1 class='col-10'>Correos de Contacto</h1>
+            <div class='col-2'>
+                <button class='btn btn-success' onclick='ImprimirCorreos()'><i class="bi bi-printer"></i> Imprimir</button>
+            </div>
+        </div>
+        <div class="table-responsive col-12" id='div_correos'>
+            <table class="table table-striped table-hover col-12">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Propuesta</th>
+                        <th scope="col">Correo</th>
+                        <th scope="col">Correo Responsable</th>
+                        <th scope="col">Asunto</th>
+                        <th scope="col">Respuesta Correo</th>
+                        <th scope="col">Archivos</th>
+                        <th scope="col">Ultimo Comentarío Interno</th>
+                        <th scope="col">Ver</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for respuesta in correos %}
+                        <tr>
+                            <td> {{ propuesta_linea.propuesta.pk }} </td>
+                            <td>
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#correoModal" style="margin: 0px; padding:0px;">
+                                    <a href="#" hx-get="{% url 'detallecorreo' respuesta.correo_id %}" hx-target="#body_correoModal" style="text-decoration: none;">
+                                        🔎
+                                    </a>
+                                </button>
+                            </td>                            
+                            <td>{{ respuesta.correo.to_email }}</td>
+                            <td>{{ respuesta.asunto }}</td>
+                            <td>
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#correoModal" style="margin: 0px; padding:0px;">
+                                    <a href="#" hx-get="{% url 'detallerespuesta' respuesta.id %}" hx-target="#body_correoModal" style="text-decoration: none;">
+                                        🔎
+                                    </a>
+                                </button>
+                            </td>
+                            {% if respuesta.archivo %}
+                                <td>
+                                    <a href="{{ respuesta.archivo.url }}" target="download">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                </td>
+                            {% else %}
+                                <td>
+                                    <span class="text-muted">Sin archivo</span>
+                                </td>
+                            {% endif %}
+                            <td>
+                                {% if propuesta_linea.comentarios.first %}
+                                    <div>
+                                        <strong>Último comentario:</strong><br>
+                                        {{ propuesta_linea.comentarios.first.texto|truncatewords:10 }}<br>
+                                        <small>
+                                            por {{ propuesta_linea.comentarios.first.autor }} el 
+                                            {{ propuesta_linea.comentarios.first.creado_en|date:"d \d\e F \d\e Y" }} a las 
+                                            {{ propuesta_linea.comentarios.first.creado_en|time:"H:i" }}
+                                        </small>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Sin comentarios</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#comentarioModal">
+                                    <a href="#" hx-get="{% url 'comentarios-modal' propuesta_linea.id %}" hx-target="#body_comentarioModal" style="text-decoration: none;">
+                                        💬
+                                    </a>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="correoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Detalle Correo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body" id="body_correoModal">
+            <!-- htmx content will be loaded here -->
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="modal fade" id="comentarioModal" tabindex="-1" aria-labelledby="comentarioModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="comentarioModalLabel">Comentarios de la propuesta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="body_comentarioModal">
+        <!-- Aquí carga HTMX -->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

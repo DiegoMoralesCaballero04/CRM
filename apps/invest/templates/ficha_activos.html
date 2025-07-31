@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Activos</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 20mm;
+        }
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 10px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .filtros {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 4px;
+            text-align: center;
+            vertical-align: top;
+        }
+        .tipo {
+            background-color: #ddd;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .tramo {
+            background-color: #f0f0f0;
+            font-style: italic;
+        }
+        .catastro {
+            font-size: 9px;
+            color: #555;
+        }
+        .no-disponible {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>INVEST MSS - GRUPO MSS</h1>
+    <h2>{{ nombre_campanya }}</h2>
+    <div class="filtros">
+        {% for f in filtros %}
+            <div>{{ f }}</div>
+        {% endfor %}
+        <div>Fecha: {{ hoy }}</div>
+    </div>
+
+    {% for tipo, tramos in activos_por_tipo.items %}
+        <div class="tipo">{{ tipo }}</div>
+        {% for tramo, activos in tramos.items %}
+            {% if activos %}
+                <div class="tramo">{{ tramo }}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>Fecha</th>
+                            <th>Clasif</th>
+                            <th>Código</th>
+                            <th>ID</th>
+                            <th>Tipología</th>
+                            <th>Dirección</th>
+                            <th>Municipio</th>
+                            <th>Provincia</th>
+                            <th>Precio</th>
+                            <th>Comentarios</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linea in activos %}
+                            <tr class="{% if linea.activo.no_disponible %}no-disponible{% endif %}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ linea.campanya.fecha|date:"d/m/Y" }}</td>
+                                <td>{{ linea.tipo }}</td>
+                                <td>{{ linea.campanya.cartera.codigo }}</td>
+                                <td>{{ linea.activo.id_proveedor }}</td>
+                                <td>{{ linea.activo.tipologia|default:"" }}</td>
+                                <td>{{ QuitaCaracteres(linea.activo.direccion) }}</td>
+                                <td>{{ linea.activo.poblacion.nombre }}</td>
+                                <td>{{ linea.activo.poblacion.provincia.nombre }}</td>
+                                <td>
+                                    {% if tipo == "NPL" %}
+                                        {{ Importe2Cadena(linea.precio|default:0|max:linea.importe_deuda|default:0) }}
+                                    {% else %}
+                                        {{ Importe2Cadena(linea.precio) }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if linea.estado_ocupacional != "0" %}
+                                        {{ linea.get_estado_ocupacional_display }}
+                                    {% endif %}
+                                    {% if linea.estado_legal %}
+                                        {{ linea.estado_legal }}
+                                    {% endif %}
+                                    {{ QuitaCaracteres(linea.observaciones) }}
+                                </td>
+                            </tr>
+                            <tr class="catastro">
+                                <td colspan="11">
+                                    Catastro: {{ linea.activo.ref_catastral }}. 
+                                    Dirección: {{ QuitaCaracteres(linea.activo.catastro_localizacion) }}. 
+                                    Uso: {{ linea.activo.catastro_uso_principal }}.
+                                    Superficie: {{ linea.activo.catastro_superficie }} m².
+                                    Año: {{ linea.activo.catastro_anyo_construccion }}.
+                                    <br/>
+                                    Localización: <a href="{{ linea.activo.DameURLGoogleMaps }}">{{ linea.activo.DameURLGoogleMaps }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</body>
+</html>

@@ -1,0 +1,74 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+
+{% block contenido %}
+
+    <div class="container col-12">
+        <div class="table-actions col-12 d-flex">
+            <h1 class='col-12'>Listado de propuestas</h1>
+        </div>
+        <div  scope='col' class="table-responsive" class='col-12' id='div_propuestas'>
+            <table class="table table-striped table-hover col-10">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col" class='text-center'>Activos</th>
+                        <th scope="col" class='text-center'>Activos de los que he pedido más información</th>
+                        <th scope="col" class='text-center'>Activos esperando mi respuesta</th>
+                        <th scope="col" class='text-center'>Activos reservados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for propuesta in propuestas %}
+                        <tr name='tr_resultado'>                            
+                            <td>       
+                                <button type="button" 
+                                    class="btn btn-info" 
+                                    hx-get="/propuesta/{{propuesta.pk}}/"
+                                    hx-target="#body_activoModal"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#activoModal">
+                                        Ver
+                                </button>
+                            </td>
+                            <td>
+                                {{ propuesta.creado_en | date:"d-m-Y" }}
+                            </td>
+                            <td>{{ propuesta.DameNombreFichero}}</td>
+                            <td class='text-center'>{{ propuesta.NumPropuestasEnviadas}}</td>
+                            <td class='text-center'>
+                                {{ propuesta.NumPropuestasInteresadasoEsperando}}
+                            </td>
+                            <td class='text-center'>{{ propuesta.NumPropuestasTrabajadas}}</td>
+                            <td class='text-center'>{{ propuesta.NumPropuestasAceptadas}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="activoModal" tabindex="-1" aria-labelledby="activoModalLabel" aria-hidden="true" >
+        <div class="modal-dialog modal-lg" style="max-width:70%">
+            <div class="modal-content" style="max-width:100%">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="activoModalLabel">Detalles de la Propuesta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="body_activoModal">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

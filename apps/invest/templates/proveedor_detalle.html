@@ -1,0 +1,130 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+{% load static %}
+
+{% block style_css %} 
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            margin: auto;
+            text-align: center;
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .card .label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .card .value {
+            font-weight: normal;
+            color: #333;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357ab7;
+        }
+    </style>
+{% endblock %}
+
+{% block contenido %}
+    <div class="container">
+
+    <div class="card">
+        <p><span class="label">Nombre del servicer:</span> <span class="value">{{ object.nombre }}</span></p>
+
+        <table class='table table-striped'>
+            <thead><tr><th><b>Carteras</b></th><th>Código</th><th>Nombre</th><th></th></tr></thead>
+            <tbody>
+                {% for cartera in object.DameCarteras %}
+                    <tr>
+                        <td></td>
+                        <td>{{cartera.codigo}}</td>
+                        <td>{{cartera.nombre}}</td>
+                        <td>
+                            <a href="{% url 'editarcartera' cartera.proveedor.pk cartera.pk %}" class="text-primary me-2" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'eliminarcartera' cartera.proveedor.pk cartera.pk %}" class="text-danger" title="Eliminar" aria-label="Eliminar" onclick="return confirm('¿Estás seguro de que desea eliminar esta cartera?');">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'crearcartera' object.pk %}">
+        <button class='btn btn-primary'>Añadir nueva cartera</button>
+        </a>
+
+        <table class='table table-striped'>
+            <thead><tr><th><b>Contactos</b></th><th>Nombre</th><th>Puesto</th><th>Correo</th><th>Teléfono</th><th></th></tr></thead>
+            <tbody>
+                {% for contacto in object.DameContactos %}
+                    <tr>
+                        <td></td>
+                        <td>{{contacto.nombre}}</td>
+                        <td>{{contacto.correo}}</td>
+                        <td>{{contacto.telefono}}</td>
+                        <td>{{contacto.cargo}}</td>
+                        <td>
+                            <a href="{% url 'editarcontacto' contacto.proveedor.pk contacto.pk %}" class="text-primary me-2" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'eliminarcontacto' contacto.proveedor.pk contacto.pk %}" class="text-danger" title="Eliminar" aria-label="Eliminar" onclick="return confirm('¿Estás seguro de que desea eliminar este contacto?');">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'crearcontacto' object.pk %}">
+        <button class='btn btn-primary'>Añadir nuevo contacto</button>
+        </a>
+
+    </div>
+
+    </div>
+    <!-- <div hx-get="/activo/listar/?campanya={{object.id}}" hx-trigger="load" id='listado_activos' style="height: 100%"></div> -->
+{% endblock %}

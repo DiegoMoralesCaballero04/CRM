@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block contenido %}
+
+<h1>Eliminar contacto</h1>
+<form method="post">
+    {% csrf_token %}
+    <p>
+        ¿Estás seguro de querer eliminar el proveedor {{ object }}?
+    </p>
+    {% bootstrap_form form %}
+    {% bootstrap_button button_type="submit" content="Confirmar" %}
+</form>
+<a class="btn btn-info" href="{% url 'listarproveedor' %}" role="button">Volver</a>
+{% endblock %}

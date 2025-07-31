@@ -1,0 +1,1165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style_css %} 
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header1 {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .form-label {
+            font-weight: bold;
+        }
+
+        .dropzone {
+            border: 2px dashed #007bff;
+            padding: 30px;
+            text-align: center;
+            color: #007bff;
+            background-color: #e9f4ff;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .dropzone.dragover {
+            background-color: #cce5ff;
+        }
+
+        .images-container img {
+            width: 100px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block contenido %}
+
+    <div class="container mt-5" style="max-width: 100%">
+        <h1 class="mb-4 text-center">Edición de activo</h1>
+        <div class="row">
+            <!-- Left Column with Form -->
+            <div class="col-md-8">
+                <div class="card" style="max-width:800px">
+                    <div class="card-header card-header1">Activo</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {% if linea.activo.no_disponible %}
+                                    <button class='btn btn-danger' onclick='Activo_disponible({{linea.id}}, {{linea.activo.id}})'>NO DISPONIBLE</button>
+                                {% else %}
+                                    <button class='btn btn-success' onclick='Activo_no_disponible({{linea.id}}, {{linea.activo.id}})'>DISPONIBLE</button>
+                                {% endif %}                            
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">    
+                                <button class='btn btn-info' onclick='PedirDatosCatastro({{linea.id}}, {{linea.activo.id}})'>Catastro</button>
+                            </div>
+                        </div>
+                        
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="tipo" class="form-label">Tipo</label>
+                                <select class="form-select" id="tipo">
+                                    <option value="NPL">NPL-Cesión de crédito</option>
+                                    <option value="CDR">CDR-Cesión de remate</option>
+                                    <option value="REO">REO-Compra de activo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_proveedor" class="form-label">ID Proveedor</label>
+                                <input type="text" class="form-control" id="id_proveedor" placeholder="ID Proveedor" value='{{linea.activo.id_proveedor}}'>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="ref_ue" class="form-label">Referencia UE</label>
+                                <input type="text" class="form-control" id="ref_ue" placeholder="Referencia UE" value='{{linea.activo.ref_ue}}'>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="ref_catastral" class="form-label">Referencia Catastral</label>
+                                <input type="text" class="form-control" id="ref_catastral" placeholder="Referencia catastral" value='{{linea.activo.ref_catastral}}'>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="subtipologia" class="form-label" onchange="cambiarTipologia(subtipologia.id)">Subtipología</label>
+                                <select class="form-select" id="subtipologia" onchange="cambiarTipologia(this.value)">
+                                    {% for subtipologia in subtipologias %}
+                                        <option value="{{ subtipologia.id }}"
+                                            {% if subtipologia.id == linea.activo.tipologia.subgrupo.id %}selected{% endif %}>
+                                            {{ subtipologia.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="tipologia" class="form-label">Tipología</label>
+                                <select class="form-select" id="tipologia">
+                                    {% for tipologia in tipologias %}
+                                        <option value="{{ tipologia.id }}"
+                                            {% if tipologia.id == linea.activo.tipologia.id %}selected{% endif %}>
+                                            {{ tipologia.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+
+                            <div class="col-md-12 mb-3">
+                                <label for="direccion" class="form-label">Dirección</label>
+                                <textarea class="form-control" id="direccion" rows="2" placeholder="Dirección">{{ linea.activo.direccion }}</textarea>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="cp" class="form-label">Código Postal</label>
+                                <input type="text" class="form-control text-center" id="cp" placeholder="Código Postal" value='{{linea.activo.cp}}'>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="provincia" class="form-label">Provincia</label>
+                                <select class="form-select" id="provincia">
+                                    {% for provincia in provincias %}
+                                        <option value="{{provincia.pk}}" {% if linea.activo.poblacion.provincia.pk == provincia.pk %}selected{% endif %}>
+                                        {{provincia.nombre}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="poblacion" class="form-label">Población</label>
+                                <select class="form-select" id="poblacion">
+                                    <option value="{{linea.activo.poblacion.pk }}">
+                                        {{linea.activo.poblacion.nombre }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label><b>Ubicación</b></label><br/>
+                                {% if linea.activo.latitud %}
+                                    <a href='https://www.google.com/maps?q={{linea.activo.DameLocalizacion}}' target="_blank">
+                                        <button class='btn btn-primary'>Ir</button></a>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="longitud" class="form-label">Longitud</label>
+                                <input type="number" step="0.000001" class="form-control text-center" id="longitud" placeholder="Longitud" value='{{linea.activo.longitud}}'>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="latitud" class="form-label">Latitud</label>
+                                <input type="number" step="0.000001" class="form-control text-center" id="latitud" placeholder="Latitud" value='{{linea.activo.latitud}}'>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="m2" class="form-label">Metros Cuadrados</label>
+                                <input type="number" class="form-control text-center" id="m2" placeholder="Metros Cuadrados" value='{{linea.activo.m2|floatformat}}'>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="fecha_construccion" class="form-label">Fecha Construcción</label>
+                                <input type="number" class="form-control text-center" id="fecha_construccion" placeholder="Año de construcción" value='{{linea.activo.fecha_construccion}}'>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="num_habitaciones" class="form-label">Nº de Habitaciones</label>
+                                <input type="number" class="form-control text-center" id="num_habitaciones" placeholder="Nº de habitaciones" value='{{linea.activo.num_habitaciones}}'>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="num_banyos" class="form-label">Número de Baños</label>
+                                <input type="number" class="form-control text-center" id="num_banyos" placeholder="Nº de baños" value='{{linea.activo.num_banyos}}'>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="estado_ocupacional" class="form-label">Estado ocupacional</label>
+                                <select class="form-select" id="estado_ocupacional">
+                                    <!-- ESTADO_OCUPACIONAL=[('0','Desconocido'), ('1','Vacío'), ('2','Ocupado'), ('3','Alquilado'), ('4','Ocupado por propietario')] -->
+                                    <option value="0" {% if linea.estado_ocupacional == "0" %}selected{% endif %}>Desconocido</option>
+                                    <option value="1" {% if linea.estado_ocupacional == "1" %}selected{% endif %}>Vacío</option>
+                                    <option value="2" {% if linea.estado_ocupacional == "2" %}selected{% endif %}>Ocupado</option>
+                                    <option value="3" {% if linea.estado_ocupacional == "3" %}selected{% endif %}>Alquilado</option>
+                                    <option value="4" {% if linea.estado_ocupacional == "4" %}selected{% endif %}>Ocupado por propietario</option>
+                                </select>                                
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="estado_legal" class="form-label">Estado legal</label>
+                                <input type="text" class="form-control" id="estado_legal" placeholder="Estado legal" value='{{linea.estado_legal}}'>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="judicializado" class="form-label">Judicializado</label>
+                                <select class="form-select" id="judicializado">
+                                    <option value="0" {% if linea.judicializado == "0" %}selected{% endif %}>Desconocido</option>
+                                    <option value="1" {% if linea.judicializado == "1" %}selected{% endif %}>Sí</option>
+                                    <option value="2" {% if linea.judicializado == "2" %}selected{% endif %}>No</option>                                    
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="localizado" class="form-label">Prop Localizado</label>
+                                <select class="form-select" id="localizado">
+                                    <option value="0" {% if linea.deudor_localizado == "0" %}selected{% endif %}>Desconocido</option>
+                                    <option value="1" {% if linea.deudor_localizado == "1" %}selected{% endif %}>Sí</option>
+                                    <option value="2" {% if linea.deudor_localizado == "2" %}selected{% endif %}>No</option>                                    
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="ayuda" class="form-label">Prop Colabora</label>
+                                <select class="form-select" id="ayuda">
+                                    <option value="0" {% if linea.ayuda == "0" %}selected{% endif %}>Desconocido</option>
+                                    <option value="1" {% if linea.ayuda == "1" %}selected{% endif %}>Sí</option>
+                                    <option value="2" {% if linea.ayuda == "2" %}selected{% endif %}>No</option>                                    
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="observaciones" class="form-label">Observaciones</label>
+                                <textarea class="form-control" id='observaciones'></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="ultimo_hito" class="form-label">Ultimo Hito</label>
+                                <textarea class="form-control" id='ultimo_hito'></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="fecha_estudio_posicion" class="form-label">Fecha estudio de posición</label>
+                                <input type="date" class="form-control text-center" id="fecha_estudio_posicion" value="{{ linea.activo.fecha_estudio_posicion|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="respuesta_fondo" class="form-label">Respuesta del fondo</label>
+                                <textarea class="form-control" id="respuesta_fondo" rows="2">{{ linea.activo.respuesta_fondo }}</textarea>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="comentarios" class="form-label">Comentarios internos</label>
+                                <textarea class="form-control" id="comentarios" rows="3">{{ linea.activo.comentarios }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="precio" class="form-label">Precio Mercado</label>
+                                <input type="number" step="0.01" class="form-control text-center" id="precio_mercado" placeholder="Precio" value=''>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="importe_deuda" class="form-label">Importe deuda</label>
+                                <input type="number" step="0.01" class="form-control text-center" id="importe_deuda" placeholder="Importe deuda" value=''>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="valor_referencia" class="form-label">Valor Subasta</label>
+                                <input type="number" step="0.01" class="form-control text-center" id="valor_referencia" placeholder="Valor subasta" value=''>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="valor_mercado" class="form-label">Valor Mercado</label>
+                                <input type="number" step="0.01" class="form-control text-center" id="valor_mercado" placeholder="Valor mercado" value=''>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="valor_70" class="form-label">Valor 70%</label>
+                                <input type="number" step="0.01" class="form-control text-center" id="valor_70" placeholder="Valor 70%" value=''>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="estado_activo" class="form-label">Estado Activo</label>
+                                <select class="form-select" id="estado_activo" name="estado_activo">
+                                    <!-- ESTADO_ACTIVO = [('disponible','Disponible'), ('reservado','Reservado'), ('vendido','Vendido'), ('baja','De baja')] -->
+                                    <option value="publicado" {% if linea.activo.estado_activo == "publicado" %}selected{% endif %}>Publicado</option>
+                                    <option value="reservado" {% if linea.activo.estado_activo == "reservado" %}selected{% endif %}>Reservado</option>
+                                    <option value="vendido" {% if linea.activo.estado_activo == "vendido" %}selected{% endif %}>Vendido</option>
+                                    <option value="baja" {% if linea.activo.estado_activo == "no publicado" %}selected{% endif %}>NO Publicado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="portales_section">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check text-center">
+                                        <input class="form-check-input" type="checkbox" id="idealista"
+                                               {% if linea.activo.idealista %}checked{% endif %}>
+                                        <label class="form-check-label" for="idealista">Idealista</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check text-center">
+                                        <input class="form-check-input" type="checkbox" id="fotocasa_pro"
+                                               {% if linea.activo.fotocasa_pro %}checked{% endif %}>
+                                        <label class="form-check-label" for="fotocasa_pro">Fotocasa Pro</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check text-center">
+                                        <input class="form-check-input" type="checkbox" id="web"
+                                               {% if linea.activo.web_invest %}checked{% endif %}>
+                                        <label class="form-check-label" for="web">Web</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        </div>                     
+                    </div>
+                            <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg" id='guardarBtn'>Guardar</button>
+                    </div>
+
+                    <!-- Imágenes Section -->
+                    <div class="card">
+                        <div class="card-header card-header1">Imágenes</div>
+                        <div class="ca rd-body">
+                            <div class="row">
+                                <form method="post" enctype="multipart/form-data" id="uploadForm-imagenes" action='/activo/api/'>
+                                    {% csrf_token %}
+                                    <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                    <div class='m-3'>
+                                        <!-- Drag and Drop Area -->
+                                        <div class="form-group">    
+                                            <label class="form-label">Añadir Imágenes</label>
+                                            <div class="dropzone" id="dropzoneImg">
+                                                Arrastra y suelta tus imágenes aquí o haz clic para subir.
+                                            </div>
+                                            <input type="file" id="inputImagenes" name='inputImagenes' accept="image/*" multiple style="display:none;" onchange="submitForm('Imagenes')">
+                                        </div>
+                                    </div>
+                                </form>
+                                <div id="galeria_imagenes">
+                                    {% for imagen in linea.activo.DameImagenes %}
+                                        <div class="imagen-item" id="div_imagen_{{ imagen.id }}" style="display: inline-block; margin: 10px;">
+                                            <!-- Muestra la imagen -->
+                                            <img src="{{ imagen.imagen.url }}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
+                                            
+                                            <!-- Botón para eliminar la imagen -->
+                                            <button class="btn btn-danger" onclick="EliminarImagenActivo({{ imagen.id }})" style="display: block; margin-top: 5px;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-header card-header1">Nota simple</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <form method="post" enctype="multipart/form-data" id="uploadForm-NotaSimple" action='/activo/api/'>
+                                                {% csrf_token %}
+                                                <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                                <div class="dropzone" id="dropzoneNotaSimple">
+                                                    Doc.
+                                                </div>
+                                                <input type="file" id="inputNotaSimple" name='inputNotaSimple' style="display:none;" onchange="submitForm('NotaSimple')">
+                                            </form>
+                                            {% for documento in linea.activo.DameNotasSimple %}
+                                                <div class='text-center'>
+                                                    <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                                    <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-header card-header1">Catastro</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <form method="post" enctype="multipart/form-data" id="uploadForm-Catastro" action='/activo/api/'>
+                                                {% csrf_token %}
+                                                <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                                <div class="dropzone" id="dropzoneCatastro">
+                                                    Doc.
+                                                </div>
+                                                <input type="file" id="inputCatastro" name='inputCatastro' style="display:none;" onchange="submitForm('Catastro')">
+                                            </form>
+                                            {% for documento in linea.activo.DameCatastros %}
+                                                <div class='text-center'>
+                                                    <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                                    <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-header card-header1">Tasación</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <form method="post" enctype="multipart/form-data" id="uploadForm-Tasacion" action='/activo/api/'>
+                                                {% csrf_token %}
+                                                <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                                <div class="dropzone" id="dropzoneTasacion">
+                                                    Doc.
+                                                </div>
+                                                <input type="file" id="inputTasacion" name='inputTasacion' style="display:none;" onchange="submitForm('Tasacion')">
+                                            </form>
+                                            {% for documento in linea.activo.DameTasaciones %}
+                                                <div class='text-center'>
+                                                    <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                                    <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-header card-header1">Escritura préstamo hipotecario</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <form method="post" enctype="multipart/form-data" id="uploadForm-Prestamo" action='/activo/api/'>
+                                                {% csrf_token %}
+                                                <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                                <div class="dropzone" id="dropzonePrestamo">
+                                                    Doc.
+                                                </div>
+                                                <input type="file" id="inputPrestamo" name='inputPrestamo' style="display:none;" onchange="submitForm('Prestamo')">
+                                            </form>
+                                            {% for documento in linea.activo.DamePrestamos %}
+                                                <div class='text-center'>
+                                                    <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                                    <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-header card-header1">Documentación judicial</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <form method="post" enctype="multipart/form-data" id="uploadForm-Judicial" action='/activo/api/'>
+                                                {% csrf_token %}
+                                                <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                                <div class="dropzone" id="dropzoneJudicial">
+                                                    Doc.
+                                                </div>
+                                                <input type="file" id="inputJudicial" name='inputJudicial' style="display:none;" onchange="submitForm('Judicial')">
+                                            </form>
+                                            {% for documento in linea.activo.DameJudiciales %}
+                                                <div class='text-center'>
+                                                    <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                                    <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-header card-header1">Certificado de deuda</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <form method="post" enctype="multipart/form-data" id="uploadForm-Deuda" action='/activo/api/'>
+                                                {% csrf_token %}
+                                                <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                                <div class="dropzone" id="dropzoneDeuda">
+                                                    Doc.
+                                                </div>
+                                                <input type="file" id="inputDeuda" name='inputDeuda' style="display:none;" onchange="submitForm('Deuda')">
+                                            </form>
+                                            {% for documento in linea.activo.DameDeudas %}
+                                                <div class='text-center'>
+                                                    <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                                    <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documentación Adjunta Section -->
+                <div class="card">
+                    <div class="card-header card-header1">Documentación Adjunta</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <form method="post" enctype="multipart/form-data" id="uploadForm-Doc" action='/activo/api/'>
+                                    {% csrf_token %}
+                                    <input type="number" name="id_activo" style="display:none;" value="{{linea.activo.pk}}">
+                                    <div class="dropzone" id="dropzoneDoc">
+                                        Arrastra y suelta aquí tus documentos o haz clic para subir.
+                                    </div>
+                                    <input type="file" id="inputDoc" name='inputDoc' multiple style="display:none;" onchange="submitForm('Doc')">
+                                </form>
+                                {% for documento in linea.activo.DameDocs %}
+                                    <div class='text-center'>
+                                        <label>{{ documento.creado_en|date:"d-m-Y" }}</label>
+                                        <a href="{{ documento.documento.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> Abrir documento
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <a href="{% url 'generar_ficha_pdf' linea_id=linea.id %}" class="btn btn-success btn-lg" target="_blank">
+                        Generar Ficha
+                    </a>
+                </div>
+                <br/>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header card-header1">Visor</div>
+                    <div class="card-body" id='div_cartel'>
+                        
+                    </div>
+                    <div class="card-header card-header1">Catastro</div>
+                    <div class="card-body" id='div_catastro'>
+                        
+                    </div>
+                    <div class="card-header card-header1">Asistente</div>
+                    <div class="card-body" id="div_asistente">
+                        <textarea id="question" class="form-control mb-2" rows="3" placeholder="Hazle una pregunta al asistente..."></textarea>
+                        <button class="btn btn-primary btn-sm" onclick="sendQuestion()">Enviar</button>
+                        <div class="mt-2">
+                            <strong>Respuesta:</strong>
+                            <div id="answer" class="mt-1" style="white-space: pre-wrap; background-color: #f8f9fa; padding: 10px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Solución para que los decimales se muestren correctamente
+        document.getElementById('precio_mercado').value = "{{ linea.precio|default_if_none:''|floatformat:'2' }}".replace(",", ".");
+        document.getElementById('importe_deuda').value = "{{ linea.importe_deuda|default_if_none:''|floatformat:'2' }}".replace(",", ".");
+        document.getElementById('valor_referencia').value = "{{ linea.valor_referencia|default_if_none:''|floatformat:'2' }}".replace(",", ".");    
+        document.getElementById('valor_mercado').value = "{{ linea.valor_mercado|default_if_none:''|floatformat:'2' }}".replace(",", ".");    
+        document.getElementById('valor_70').value = "{{ linea.valor_70|default_if_none:''|floatformat:'2' }}".replace(",", ".");    
+
+
+        document.getElementById('observaciones').value = "{{ linea.observaciones|default_if_none:'' }}";    
+        document.getElementById('ultimo_hito').value = "{{ linea.activo.ultimo_hito|default_if_none:'' }}";    
+        
+        window.onload = async (event) => {
+            document.getElementById('direccion').value = "{{linea.activo.direccion}}";
+            try {
+                const hxResponse = await fetch("/activo/{{linea.activo.id}}/detalle/");
+                if (hxResponse.ok) {
+                    const content = await hxResponse.text(); // Obtener el HTML del response
+                    document.getElementById('div_cartel').innerHTML = content; // Actualizar el target
+                } else {
+                    showAlert('Error al hacer hx-get.', 'danger');
+                }
+            } catch (error) {
+                showAlert('Error:', error, 'danger');
+            }
+        
+            const provinciaSelect = document.getElementById("provincia");
+            const municipioSelect = document.getElementById("poblacion");
+
+            provinciaSelect.addEventListener("change", function() {
+                const provinciaId = this.value;
+                if (provinciaId) {
+                    fetch(`{% url 'apicampanya' %}?provincia=${provinciaId}&accion=cargar_poblaciones_old`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Limpiar las opciones de cartera
+                            municipioSelect.innerHTML = '<option value="">---------</option>';
+                            // Agregar las nuevas opciones de cartera
+                            data.forEach(function(poblacion) {
+                                const option = document.createElement("option");
+                                option.value = poblacion.id;
+                                option.textContent = poblacion.nombre;
+                                municipioSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error("Error al cargar carteras:", error));
+                } else {
+                    // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+                    let option;
+                    municipioSelect.innerHTML = '<option value="">---------</option>';
+                }
+            });
+        };
+
+
+
+
+        document.getElementById('guardarBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Capturar los valores del formulario
+            console.log(document.getElementById('idealista').checked)
+            console.log(document.getElementById('fotocasa_pro').checked)
+            console.log(document.getElementById('web').checked)
+
+            const data = {
+                accion:"editar",
+                linea:{{linea.pk}},
+                tipo: document.getElementById('tipo').value,
+                id_proveedor: document.getElementById('id_proveedor').value,
+                ref_ue: document.getElementById('ref_ue').value,
+                ref_catastral: document.getElementById('ref_catastral').value,
+                tipologia: document.getElementById('subtipologia').value,
+                subtipologia: document.getElementById('tipologia').value,
+                direccion: document.getElementById('direccion').value,
+                cp: document.getElementById('cp').value,
+                poblacion: document.getElementById('poblacion').value,
+                longitud: document.getElementById('longitud').value,                
+                latitud: document.getElementById('latitud').value,
+                m2: document.getElementById('m2').value,
+                fecha_construccion: document.getElementById('fecha_construccion').value,
+                num_habitaciones: document.getElementById('num_habitaciones').value,
+                num_banyos: document.getElementById('num_banyos').value,
+                importe_deuda: document.getElementById('importe_deuda').value,
+                precio_mercado: document.getElementById('precio_mercado').value,
+                valor_referencia: document.getElementById('valor_referencia').value,
+                estado_ocupacional: document.getElementById('estado_ocupacional').value,
+                estado_legal: document.getElementById('estado_legal').value,
+                observaciones: document.getElementById('observaciones').value,
+                judicializado: document.getElementById('judicializado').value,
+                deudor_localizado: document.getElementById('localizado').value,
+                deudor_ayuda: document.getElementById('ayuda').value,
+                valor_mercado: document.getElementById('valor_mercado').value || 0,
+                valor_70: document.getElementById('valor_70').value,
+                ultimo_hito: document.getElementById('ultimo_hito').value,
+                estado_activo: document.getElementById('estado_activo').value,
+                idealista: document.getElementById('idealista').checked,
+                fotocasa_pro: document.getElementById('fotocasa_pro').checked,
+                web_invest: document.getElementById('web').checked,
+                fecha_estudio_posicion: document.getElementById('fecha_estudio_posicion').value,
+                comentarios: document.getElementById('comentarios').value,
+                respuesta_fondo: document.getElementById('respuesta_fondo').value,
+            };
+
+            // Enviar el POST usando Fetch API
+            fetch('/activo/api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Si usas Django
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status=='success') {
+                    showAlert('Datos guardados correctamente.', 'success');
+                } else {
+                    showAlert('Error al guardar los datos.' + result.message, 'danger');
+                }
+            })
+            .catch(error => showAlert('Error:', error, 'danger'));
+        });
+        
+        // Arrastrar y soltar imágenes
+        const dropzoneImg = document.getElementById('dropzoneImg');
+        const inputImagenes = document.getElementById('inputImagenes');
+        
+        dropzoneImg.addEventListener('click', () => inputImagenes.click());
+        dropzoneImg.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzoneImg.classList.add('dragover');
+        });
+        dropzoneImg.addEventListener('dragleave', () => dropzoneImg.classList.remove('dragover'));
+        dropzoneImg.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputImagenes')
+        });
+
+        // Arrastrar y soltar nota simple
+        const dropzoneNotaSimple = document.getElementById('dropzoneNotaSimple');
+        const inputNotaSimple = document.getElementById('inputNotaSimple');
+        dropzoneNotaSimple.addEventListener('click', () => inputNotaSimple.click());
+        dropzoneNotaSimple.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzoneNotaSimple.classList.add('dragover');
+        });
+        dropzoneNotaSimple.addEventListener('dragleave', () => dropzoneNotaSimple.classList.remove('dragover'));
+        dropzoneNotaSimple.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputNotaSimple')
+        });
+
+
+        // Arrastrar y soltar catastro
+        const dropzoneCatastro = document.getElementById('dropzoneCatastro');
+        const inputCatastro = document.getElementById('inputCatastro');
+        dropzoneCatastro.addEventListener('click', () => inputCatastro.click());
+        dropzoneCatastro.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzoneCatastro.classList.add('dragover');
+        });
+        dropzoneCatastro.addEventListener('dragleave', () => dropzoneCatastro.classList.remove('dragover'));
+        dropzoneCatastro.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputCatastro')
+        });
+
+        // Arrastrar y soltar tasacion
+        const dropzoneTasacion = document.getElementById('dropzoneTasacion');
+        const inputTasacion = document.getElementById('inputTasacion');
+        dropzoneTasacion.addEventListener('click', () => inputTasacion.click());
+        dropzoneTasacion.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzoneTasacion.classList.add('dragover');
+        });
+        dropzoneTasacion.addEventListener('dragleave', () => dropzoneTasacion.classList.remove('dragover'));
+        dropzoneTasacion.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputTasacion')
+        });
+
+        // Arrastrar y soltar prestamo
+        const dropzonePrestamo = document.getElementById('dropzonePrestamo');
+        const inputPrestamo = document.getElementById('inputPrestamo');
+        dropzonePrestamo.addEventListener('click', () => inputPrestamo.click());
+        dropzonePrestamo.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzonePrestamo.classList.add('dragover');
+        });
+        dropzonePrestamo.addEventListener('dragleave', () => dropzonePrestamo.classList.remove('dragover'));
+        dropzonePrestamo.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputPrestamo')
+        });
+        // Arrastrar y soltar judicial
+        const dropzoneJudicial = document.getElementById('dropzoneJudicial');
+        const inputJudicial = document.getElementById('inputJudicial');
+        dropzoneJudicial.addEventListener('click', () => inputJudicial.click());
+        dropzoneJudicial.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzoneJudicial.classList.add('dragover');
+        });
+        dropzoneJudicial.addEventListener('dragleave', () => dropzoneJudicial.classList.remove('dragover'));
+        dropzoneJudicial.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputJudicial')
+        });
+        // Arrastrar y soltar deuda
+        const dropzoneDeuda = document.getElementById('dropzoneDeuda');
+        const inputDeuda = document.getElementById('inputDeuda');
+        dropzoneDeuda.addEventListener('click', () => inputDeuda.click());
+        dropzoneDeuda.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzonePrestamo.classList.add('dragover');
+        });
+        dropzoneDeuda.addEventListener('dragleave', () => dropzoneDeuda.classList.remove('dragover'));
+        dropzoneDeuda.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputDeuda')
+        });
+        // Arrastrar y soltar doc
+        const dropzoneDoc = document.getElementById('dropzoneDoc');
+        const inputDoc = document.getElementById('inputDoc');
+        dropzoneDoc.addEventListener('click', () => inputDoc.click());
+        dropzoneDoc.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzonePrestamo.classList.add('dragover');
+        });
+        dropzoneDoc.addEventListener('dragleave', () => dropzoneDoc.classList.remove('dragover'));
+        dropzoneDoc.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleDrop(e, 'inputDoc')
+        });
+
+
+
+
+        function handleDrop(event, nombre_input) {
+            event.preventDefault();
+            const fileInput = document.getElementById(nombre_input);
+            const files = event.dataTransfer.files;
+
+            // Insertar el archivo en el input file y mostrar el nombre
+            if (files.length > 0) {
+                fileInput.files = files;
+                submitForm(nombre_input); // Enviar el formulario
+            }
+        }
+
+        async function submitForm(accion) {
+            // Enviar el formulario automáticamente para los documentos e imágenes
+            let form
+            if (accion=="NotaSimple"){
+                accion=="NotaSimple"
+                form = document.getElementById('uploadForm-NotaSimple');
+            }else if (accion=='Catastro'){
+                accion='Catastro'
+                form = document.getElementById('uploadForm-Catastro');                
+            }else if (accion=='Tasacion'){
+                accion='Tasacion'
+                form = document.getElementById('uploadForm-Tasacion');                
+            }else if (accion=='Prestamo'){
+                accion='Prestamo'
+                form = document.getElementById('uploadForm-Prestamo');                
+            }else if (accion=='Judicial'){
+                accion='Judicial'
+                form = document.getElementById('uploadForm-Judicial');                
+            }else if (accion=='Deuda'){
+                accion='Deuda'
+                form = document.getElementById('uploadForm-Deuda');                
+            }else if (accion=='Doc'){
+                accion='Doc'
+                form = document.getElementById('uploadForm-Doc');                
+            }else if ((accion=='Imagenes')||(accion=='inputImagenes')){
+                accion='Imagenes'
+                form = document.getElementById('uploadForm-imagenes');                
+            }else{
+                console.log("no entro")
+            }
+
+            const formData = new FormData(form);
+            formData.append('accion', accion);
+
+            try {
+                const response = await fetch("/activo/api/", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}' // Incluyendo el token CSRF en el encabezado para seguridad
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json(); 
+                    try {
+                        const hxResponse = await fetch("/activo/{{linea.activo.id}}/detalle/");
+                        if (hxResponse.ok) {
+                            window.location.reload()
+                            const content = await hxResponse.text(); // Obtener el HTML del response
+                            document.getElementById('div_cartel').innerHTML = content; // Actualizar el target
+                        } else {
+                            console.error('Error al hacer hx-get.');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                } else {
+                    showAlert('Error al subir el archivo.', 'danger');
+                }
+            } catch (error) {
+                showAlert('Error al procesar la solicitud.', 'danger');
+            }
+        }
+
+
+        function EliminarImagenActivo(idimagen){
+            if (confirm("¿Desea eliminar esta imagen?")){
+                const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+                const params = new URLSearchParams({
+                    accion:'eliminar_imagen',
+                    id_activo: '{{linea.activo.pk}}',
+                    id_imagen: idimagen
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                        }
+                        showAlert('Imagen eliminada correctamente', 'success');
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if (data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            document.getElementById('div_imagen_'+ idimagen).remove()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+            }
+        }
+
+        // Lo necesito para el carrusel de imagenes
+        let currentIndex = 0;
+
+        function moveSlide(direction) {
+          const slide = document.querySelector('.carousel-slide');
+          const images = slide.querySelectorAll('img');
+          const imageWidth = images[0].clientWidth;
+          const totalImages = images.length;
+
+          currentIndex += direction;
+
+          // Cicla hacia el principio/final del carrusel
+          if (currentIndex < 0) {
+            currentIndex = totalImages - 1;
+          } else if (currentIndex >= totalImages) {
+            currentIndex = 0;
+          }
+
+          slide.style.transform = `translateX(${-imageWidth * currentIndex}px)`;
+        }
+
+        function Activo_disponible(linea_id, activo_id){
+            if (confirm("¿Desea volver a dejar como disponible este activo?")){
+                const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+                const params = new URLSearchParams({
+                    accion:'activodisponible',
+                    linea:linea_id,
+                    activo:activo_id
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                        }
+                        showAlert('Activo disponible correctamente', 'success');
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if(data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            window.location.reload()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+            }
+        }
+
+        function Activo_no_disponible(linea_id, activo_id){
+            if (confirm("¿Desea poner como no disponible este activo?")){
+                const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+                const params = new URLSearchParams({
+                    accion:'activonodisponible',
+                    linea:linea_id,
+                    activo:activo_id
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la solicitud: ' + response.statusText);
+                        }
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if(data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            window.location.reload()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+            }
+        }
+
+        function PedirDatosCatastro(linea_id, activo_id){
+            const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+            const params = new URLSearchParams({
+                accion:'pedir_info_catastro',
+                linea:linea_id,
+                activo:activo_id
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', 
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    if(data.error){
+                        showAlert(data.literror, 'danger');
+                    }else{
+                        const divCatastro = document.getElementById("div_catastro");
+                        divCatastro.innerHTML = "";
+                        divCatastro.innerHTML = data.html;
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+        }
+
+        function sendQuestion() {
+            const question = document.getElementById("question").value;
+            const context = getActiveContext();
+            console.log(context)
+            if (!question.trim()) {
+                document.getElementById("answer").innerText = "Por favor, escribe una pregunta.";
+                return;
+            }
+            document.getElementById("answer").innerText = "";   
+            fetch("/openai/chat/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken')  
+                },
+                body: JSON.stringify({ question, context })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.answer) {
+                    document.getElementById("answer").innerText = data.answer;
+                } else {
+                    document.getElementById("answer").innerText = "Error: " + data.error;
+                }
+            })
+            .catch(error => {
+                document.getElementById("answer").innerText = "Error de red: " + error;
+            });
+        }
+
+        // Función para extraer el token CSRF si estás usando protección
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function getActiveContext() {
+            const idProveedor = document.getElementById("id_proveedor")?.value || "";
+            const refCatastral = document.getElementById("ref_catastral")?.value || "";
+            const direccion = document.getElementById("direccion")?.value || "";
+
+            return [idProveedor, refCatastral, direccion];
+        }
+
+        function actualizarVisibilidadPortales() {
+            const estado = document.getElementById('estado_activo').value;
+            const seccionPortales = document.getElementById('portales_section');
+            if (estado === 'publicado' || estado === 'reservado') {
+                seccionPortales.style.display = 'block';
+            } else {
+                seccionPortales.style.display = 'none';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            actualizarVisibilidadPortales(); // Ejecutar al cargar
+            document.getElementById('estado_activo').addEventListener('change', actualizarVisibilidadPortales);
+        });
+        
+
+        function cambiarTipologia(nuevo_id) {
+        
+            const arrayTipologia = {{ tipologias_por_subgrupo|safe }};
+        
+            const selectTipologia = document.getElementById("tipologia");
+        
+            selectTipologia.innerHTML = "";
+        
+            if (arrayTipologia[nuevo_id]) {
+                arrayTipologia[nuevo_id].forEach(function(t) {
+                    const option = document.createElement("option");
+                    option.value = t.id;
+                    option.textContent = t.nombre;
+                    selectTipologia.appendChild(option);
+                });
+            } else {
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Sin tipologías disponibles";
+                selectTipologia.appendChild(option);
+            }
+        }
+        
+        
+
+        
+    </script>
+{% endblock %}

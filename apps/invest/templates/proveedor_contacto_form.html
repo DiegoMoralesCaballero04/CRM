@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+<!-- {-% load crispy_forms_tags %-} -->
+
+
+{% block contenido %}
+<div class="container">
+
+    <div class="card">
+
+<div class="d-flex">
+    <div class="col-8">
+        <h1>{% if object %}Editar contacto  {{object}} {% else %}Añadir contacto {% endif %} del servicer {{proveedor.nombre}}</h1>
+        <form method="post">
+            {% csrf_token %}
+                <!-- {-% crispy form %-} -->
+            <div class='m-3'>
+            {% bootstrap_form form %}
+            {% bootstrap_button button_type="submit" content="Guardar" %}
+            </div>
+        </form>
+    </div>
+    <div class="col-4">
+        <a href="/servicer/"><button class='btn btn-secondary'>Volver a proveedores</button></a>
+    </div>
+</div>
+
+    </div>
+</div>
+
+{% endblock %}

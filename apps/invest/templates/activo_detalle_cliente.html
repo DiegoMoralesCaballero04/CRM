@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista del ACtivo</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        .flyer-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            color: white;
+            overflow: hidden;
+            border: 5px solid #f4f4f4;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        }
+        .property-location {
+            font-size: 18px;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        .price {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .details div {
+            display: flex;
+            align-items: center;
+        }
+        .details div img {
+            width: 24px;
+            margin-right: 10px;
+        }
+        
+
+        .carousel-container {
+          position: relative;
+          max-width: 100%;
+          margin: auto;
+          overflow: hidden;
+        }
+
+        .carousel-slide {
+          display: flex;
+          transition: transform 0.4s ease-in-out;
+        }
+
+        .carousel-slide img {
+          height: 300px;
+          border-radius: 10px;
+          border: 3px solid white;
+          margin: 2px;
+          padding: 2px;
+        }
+
+        .carousel-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background-color: rgba(0, 0, 0, 0.5);
+          color: white;
+          border: none;
+          padding: 10px;
+          cursor: pointer;
+          font-size: 18px;
+        }
+
+        .prev-btn {
+          left: 10px;
+        }
+
+        .next-btn {
+          right: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="flyer-container">
+    <div  style="background-color: #001a64; margin-bottom: 0px; padding-top: 5px;">
+        <img src="{{empresa.logotipo.url}}" style="width: 180px; ">
+    </div>
+    <div style="background: linear-gradient(to bottom, #001a64, white); margin-top: 0px; padding-top: 5px;">
+    
+        <h1 style="text-align: center; color: white">{{ object.DameTipo }} {{ object.tipologia.nombre }} </h1>
+        {% if imagenes %}
+            <div style="text-align: center;">
+                <div class="carousel-container">
+                  <div class="carousel-slide">
+                    {% for imagen in imagenes %}
+                    <img src="{{ imagen.imagen.url }}" style="max-width: 100%;">
+                    {% endfor %}
+                  </div>
+
+                  <!-- Botones para avanzar y retroceder -->
+                  <button class="carousel-btn prev-btn" onclick="moveSlide(-1)">&#10094;</button>
+                  <button class="carousel-btn next-btn" onclick="moveSlide(1)">&#10095;</button>
+                </div>
+            </div>
+        {% else %}
+            <div style="text-align: center;">
+              {% if object.DameURLGoogleMaps %}
+              {% csrf_token %}
+                <iframe src="{{ object.DameURLGoogleMaps }}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe> 
+              {% else %}
+                <img src="{% static '/img/sin_imagen.png' %}" style="max-height: 150px;"><br/>
+                <label>Sin imagenes</label>
+              {% endif %}
+            </div>
+        {% endif %}
+        <p class="property-location" style="color: #001a64; text-align: center;">
+            Dirección: <span class="value">{{ object.direccion }}<br/>
+            <b>{{ object.cp }} {{ object.poblacion }}</b><br/>
+            {{ object.poblacion.provincia.nombre }}</span>
+        </p>
+        {% if object.DameImporteDeuda %}
+            <p class="price" style="color: #001a64; text-align: center;">Importe de la deuda: {{ object.DameImporteDeuda| floatformat:"g" }} €</p>
+        {% endif %}
+        {% if object.DamePrecio %}
+            <p class="price" style="color: #001a64; text-align: center;">Precio: {{ object.DamePrecio| floatformat:"g" }} €</p>
+        {% endif %}
+        {% if object.DameValorSubasta %}
+            <p class="price" style="color: #001a64; text-align: center;">{{ object.DameValorSubasta| floatformat:"g" }} €</p>
+        {% endif %}
+        <p style="color: #001a64; text-align: center;"><span class="label col-4"></span> <span class="value"><a href='{{object.DameURLGoogleMaps}}' target="_blank">Ver ubicación</span></a></p>
+        <p style="color: #001a64;"><span class="label col-4">Estado:</span> <span class="value">{{ object.get_estado_ocupacional_display }}</span></p>
+        <p style="color: #001a64;"><span class="label col-4">Estado legal:</span> <span class="value">{{ object.estado_legal }}</span></p>
+        
+    </div>
+    <footer style="background-color: #001a64; text-align:center; padding-top: 2px; padding-bottom: 2px; color: white;">
+        <p >INVEST MSS S.L. info@grupomss.com<br/>
+            C/Colón, 12 - 1º-1ª - 46004 - Valencia Tel. 96 380 96 77</p>
+    </footer>
+</div>
+<script type="text/javascript">
+    let currentIndex = 0;
+
+    function moveSlide(direction) {
+      const slide = document.querySelector('.carousel-slide');
+      const images = slide.querySelectorAll('img');
+      const imageWidth = images[0].clientWidth;
+      const totalImages = images.length;
+
+      currentIndex += direction;
+
+      // Cicla hacia el principio/final del carrusel
+      if (currentIndex < 0) {
+        currentIndex = totalImages - 1;
+      } else if (currentIndex >= totalImages) {
+        currentIndex = 0;
+      }
+
+      slide.style.transform = `translateX(${-imageWidth * currentIndex}px)`;
+    }
+</script>
+</body>
+</html>

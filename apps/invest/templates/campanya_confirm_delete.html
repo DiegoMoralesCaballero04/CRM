@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block contenido %}
+
+<h1>Eliminar campaña</h1>
+<form method="post">
+    {% csrf_token %}
+    <p>
+        ¿Estás seguro de querer eliminar la campaña {{ object }}?
+    </p>
+    {% bootstrap_form form %}
+    {% bootstrap_button button_type="submit" content="Confirmar" %}
+</form>
+<a class="btn btn-info" href="{% url 'listarcampanya' %}" role="button">Volver</a>
+{% endblock %}

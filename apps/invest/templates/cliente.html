@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block style_css %} 
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-form {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            margin: auto;
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .card .label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .card .value {
+            font-weight: normal;
+            color: #333;
+        }
+
+        .edit-button {
+            position: absolute;
+            top: 40px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+        .edit-button:hover {
+            background-color: #357ab7;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .stats div {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stats div:not(:last-child) {
+            margin-right: 10px;
+        }
+
+        .stats .icon {
+            font-size: 24px;
+            color: #4a90e2;
+            margin-bottom: 5px;
+        }
+
+        .stats .label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stats .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+    </style>
+{% endblock %}
+
+{% block contenido %}
+    <div class="container">
+        <div class="table-actions">
+            <h1>Lista de inversores</h1>
+            <div class="dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Crear
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'crearcliente' %}">Crear cliente</a></li>
+                <li><a class="dropdown-item" href="{% url 'listarresponsable' %}">Crear responsable</a></li>
+              </ul>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <input type="text" id='txt_nombre_bcliente' placeholder="Nombre" name='nombre' class='col-12' 
+                       hx-get="/cliente/listar/"
+                       hx-target="#div_listado_cliente"
+                       hx-include="#txt_nombre_bcliente, #txt_responsable_bcliente"
+                       hx-trigger="keyup changed delay:500ms">
+            </div>
+            <div class="col">
+                <select id='txt_responsable_bcliente' name='representante' class='col-12'
+                        hx-get="/cliente/listar/"
+                        hx-target="#div_listado_cliente"
+                        hx-include="#txt_nombre_bcliente, #txt_responsable_bcliente"
+                        hx-trigger="change delay:500ms">
+                    <option value=''>Responsable</option>
+                    {% for responsable in responsables %}
+                        <option value='{{responsable.pk}}'>{{ responsable.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col">
+                <a href="/cliente/crear/">
+                <button type="button" 
+                        class="btn btn-success" >
+                        Nuevo
+                </button>
+                </a>
+            </div>
+        </div>
+
+        <div id='div_listado_cliente'>
+            <div hx-get="/cliente/listar/" hx-trigger="load" class='col-12'></div>
+        </div>
+        <div id='div_ficha_cliente'></div>
+
+
+    </div>
+    {% endblock %}
+
+
+
+        

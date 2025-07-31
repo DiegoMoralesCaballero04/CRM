@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block contenido %}
+
+<div class="container">
+
+    <div class="card">
+
+
+<h1>Eliminar contacto</h1>
+<form method="post">
+    {% csrf_token %}
+    <p>
+        ¿Estás seguro de querer eliminar esta cartera {{ object }} de {{object.proveedor.nombre}}?
+    </p>
+    {% bootstrap_form form %}
+    {% bootstrap_button button_type="submit" content="Confirmar" %}
+</form>
+
+    </div>
+</div>
+
+<a class="btn btn-info" href="{% url 'listarproveedor' %}" role="button">Volver</a>
+{% endblock %}

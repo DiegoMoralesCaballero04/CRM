@@ -1,0 +1,142 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+{% load static %}
+
+{% block style_css %} 
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            margin: auto;
+            text-align: center;
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .card .label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .card .value {
+            font-weight: normal;
+            color: #333;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357ab7;
+        }
+    </style>
+{% endblock %}
+
+{% block contenido %}
+    <div class="container" style="max-width:100%">
+
+    <div class="card" style="max-width:80%">
+        <label id='lbl_idcampanya' class='d-none'>{{object.pk}}</label>
+        <p><span class="label">Fecha:</span> <span class="value">{{ object.fecha }}</span></p>
+        <p><span class="label">Proveedor:</span> <span class="value">{{ object.proveedor }}</span></p>
+
+<!-- Sección de estadísticas -->
+        <div class="stats">
+            <div>
+                <a href="#" hx-get="/activo/listar/?campanya={{object.pk}}"  hx-trigger="click" hx-target="#listado_activos">
+                    <div class="icon">🏘</div>
+                    <div class="label">Activos totales</div>
+                    <div class="value">{{ object.ActivosTotales }}</div>
+                </a>
+            </div>
+            <div>
+                <a href="#" hx-get="/oferta/listar/?campanya={{object.pk}}"  hx-trigger="click" hx-target="#listado_activos">
+                    <div class="icon">📄</div>
+                    <div class="label">Activos propuestos</div>
+                    <div class="value">{{ object.PropuestasEnviadas }}</div>
+                </a>
+            </div>
+            <div>
+                <a href="#" hx-get="/oferta/listar/?campanya={{object.pk}}"  hx-trigger="click" hx-target="#listado_activos">
+                    <div class="icon">✅</div>
+                    <div class="label">Activos seleccionados</div>
+                    <div class="value">{{ object.PropuestasInteresadas }}</div>
+                </a>
+            </div>
+            <div>
+                <a href="#" hx-get="/oferta/listar/?campanya={{object.pk}}"  hx-trigger="click" hx-target="#listado_activos">
+                    <div class="icon">⏱</div>
+                    <div class="label">Propuestas esperando info de los servicers</div>
+                    <div class="value">{{ object.PropuestasEsperando }}</div>
+                </a>
+            </div>
+            <div>
+                <a href="#" hx-get="/oferta/listar/?campanya={{object.pk}}&tipo=A"  hx-trigger="click" hx-target="#listado_activos">
+                    <div class="icon">🧑‍💻</div>
+                    <div class="label">Propuestas enviadas a clientes</div>
+                    <div class="value">{{ object.PropuestasTrabajadas }}</div>
+                </a>
+            </div>
+            <div>
+                <a href="#" hx-get="/oferta/listar/?campanya={{object.pk}}&tipo=R"  hx-trigger="click" hx-target="#listado_activos">
+                    <div class="icon">💵</div>
+                    <div class="label">Propuestas aceptadas</div>
+                    <div class="value">{{ object.PropuestasAceptadas }}</div>
+                </a>
+            </div>
+            <div>
+                <div class="icon"><i class="bi bi-file-earmark-excel"></i></div>
+                <div class="label">Fichero</div>
+            {% if object.fichero %}
+                <div class="value">
+                    <a href="{{ object.fichero.url }}" target="_blank">Excel</a>
+                </div>
+            {% else %}
+                <div class="value text-muted">Sin archivo</div>
+            {% endif %}                
+            {% if user.pk == 1 %}
+                    <button onclick='ActualizarDatosCampanyaDesdeExcel({{object.pk}})'>Actualizar</button>
+                {% endif %}
+            </div>
+        </div>
+        <div id='detalle_estadisticas'>
+        </div>
+
+    </div>
+    <div hx-get="/activo/listar/?campanya={{object.id}}" hx-trigger="load" id='listado_activos' style="height: 100%"></div>
+{% endblock %}

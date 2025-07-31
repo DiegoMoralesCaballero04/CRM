@@ -1,0 +1,942 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container mt-5" style="max-width:100%">
+    <div class="p-3 bg-light shadow-sm rounded border">
+        <h3 class="mb-3 text-primary">Filtro de Activos</h3>
+        <form class="row g-2">
+            <!-- Proveedor -->
+            <div class="col-md-4">
+                <label for="proveedor_bactivo" class="form-label">Proveedor</label>
+                <!-- Campo de filtro -->
+                <input type="text" id="filtro_proveedor" class="form-control mb-2" placeholder="Buscar proveedor...">
+                
+                <!-- Checkbox para seleccionar/deseleccionar todos -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="seleccionar_todo" onclick="toggleSeleccionarTodoProveedor(this)">
+                    <label class="form-check-label" for="seleccionar_todo">
+                        Seleccionar/Deseleccionar todos
+                    </label>
+                </div>
+
+                <div id="proveedor_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for proveedor in proveedores %}
+                    <div class="form-check proveedor-item">
+                        <input class="form-check-input" type="checkbox" name="proveedor_bactivo" value="{{ proveedor.pk }}" id="proveedor_{{ proveedor.pk }}" onchange="actualizarCarteras()">
+                        <label class="form-check-label" for="proveedor_{{ proveedor.pk }}">
+                            {{proveedor.codigo}}. {{ proveedor.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- <div class="col-md-4">
+                <label for="proveedor_bactivo" class="form-label">Proveedor</label>
+                <select class="form-select" name="proveedor_bactivo" id="proveedor_bactivo">
+                    <option value="">---</option>
+                    {% for proveedor in proveedores %}
+                        <option value="{{proveedor.pk}}">{{proveedor.codigo}}. {{proveedor.nombre}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+
+            <!-- Cartera -->
+            <div class="col-md-4">
+                <label for="cartera_bactivo" class="form-label">Cartera</label>
+                <!-- Campo de filtro -->
+                <input type="text" id="filtro_cartera" class="form-control mb-2" placeholder="Buscar cartera...">
+                
+                <!-- Checkbox para seleccionar/deseleccionar todos -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="seleccionar_todo" onclick="toggleSeleccionarTodoProveedor(this)">
+                    <label class="form-check-label" for="seleccionar_todo">
+                        Seleccionar/Deseleccionar todos
+                    </label>
+                </div>
+
+                <div id="cartera_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for cartera in carteras %}
+                    <div class="form-check cartera-item">
+                        <input class="form-check-input" type="checkbox" name="cartera_bactivo" value="{{ cartera.pk }}" id="cartera_{{ cartera.pk }}">
+                        <label class="form-check-label" for="cartera_{{ cartera.pk }}">
+                            {{cartera.codigo}}. {{ cartera.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- <div class="col-md-4">
+                <label for="cartera_bactivo" class="form-label">Cartera</label>
+                <select class="form-select" name="cartera_bactivo" id="cartera_bactivo">
+                    <option value="">---</option>
+                    {% for cartera in carteras %}
+                        <option value="{{cartera.pk}}">{{cartera.codigo}}. {{cartera.nombre}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+
+            <!-- Fecha campaña -->
+            <div class="col-md-4">
+                <label class="form-label">Fecha campaña</label>
+                <div class="input-group">
+                    <span class="input-group-text">Desde</span>
+                    <input type="date" class="form-control" name="campanya_fecha_desde_bactivo" id="campanya_fecha_desde_bactivo">
+                    <span class="input-group-text">Hasta</span>
+                    <input type="date" class="form-control" name="campanya_fecha_hasta_bactivo" id="campanya_fecha_hasta_bactivo">
+                </div>
+            </div>
+
+            <!-- Categoría -->
+            <div class="col-md-4">
+                <label for="categoria_bactivo" class="form-label">Categoría</label>
+                <div id="categoria_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    <div class="form-check categoria-item">
+                        <input class="form-check-input" type="checkbox" name="categoria_bactivo" value="NPL" id="categoria_NPL">
+                        <label class="form-check-label" for="categoria_NPL">
+                            NPL
+                        </label>
+                    </div>
+                    <div class="form-check categoria-item">
+                        <input class="form-check-input" type="checkbox" name="categoria_bactivo" value="CDR" id="categoria_CDR">
+                        <label class="form-check-label" for="categoria_CDR">
+                            CDR
+                        </label>
+                    </div>
+                    <div class="form-check categoria-item">
+                        <input class="form-check-input" type="checkbox" name="categoria_bactivo" value="REO" id="categoria_REO">
+                        <label class="form-check-label" for="categoria_REO">
+                            REO
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="col-md-4">
+                <label for="categoria_bactivo" class="form-label">Categoría</label>
+                <select class="form-select" name="categoria_bactivo" id="categoria_bactivo">
+                    <option value="">---</option>
+                    <option value="NPL">NPL</option>
+                    <option value="CDR">CDR</option>
+                    <option value="REO">REO</option>
+                </select>
+            </div> -->
+
+            <!-- Grupo -->
+            <div class="col-md-4">
+                <label for="grupo_bactivo" class="form-label">Grupo</label>
+                <!-- Campo de filtro -->
+                <input type="text" id="filtro_grupo" class="form-control mb-2" placeholder="Buscar grupo...">
+                
+                <!-- Checkbox para seleccionar/deseleccionar todos -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="seleccionar_todo" onclick="toggleSeleccionarTodoGrupo(this)">
+                    <label class="form-check-label" for="seleccionar_todo">
+                        Seleccionar/Deseleccionar todos
+                    </label>
+                </div>
+
+                <div id="grupo_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for grupo in grupos %}
+                    <div class="form-check grupo-item">
+                        <input class="form-check-input" type="checkbox" name="grupo_bactivo" value="{{ grupo.pk }}" id="proveedor_{{ grupo.pk }}" onchange="actualizarTipologias()">
+                        <label class="form-check-label" for="grupo_{{ grupo.pk }}">
+                            {{ grupo.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- <div class="col-md-4">
+                <label for="grupo_bactivo" class="form-label">Grupo</label>
+                <select class="form-select" name="grupo_bactivo" id="grupo_bactivo">
+                    <option value="">---</option>
+                    {% for grupo in grupos %}
+                        <option value="{{grupo.pk}}">{{grupo.nombre}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+
+            <!-- Tipología -->
+            <div class="col-md-4">
+                <label for="tipo_bactivo" class="form-label">Tipología</label>
+                <!-- Campo de filtro -->
+                <input type="text" id="filtro_tipologia" class="form-control mb-2" placeholder="Buscar tipología...">
+                
+                <!-- Checkbox para seleccionar/deseleccionar todos -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="seleccionar_todo" onclick="toggleSeleccionarTodoTipologia(this)">
+                    <label class="form-check-label" for="seleccionar_todo">
+                        Seleccionar/Deseleccionar todos
+                    </label>
+                </div>
+
+                <div id="tipo_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for tipo in tipos %}
+                    <div class="form-check tipo-item">
+                        <input class="form-check-input" type="checkbox" name="tipo_bactivo" value="{{ tipo.pk }}" id="tipologia_{{ tipo.pk }}">
+                        <label class="form-check-label" for="tipologia_{{ tipo.grupo_id }}">
+                            {{ tipo.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- <div class="col-md-4">
+                <label for="tipo_bactivo" class="form-label">Tipología</label>
+                <select class="form-select" name="tipo_bactivo" id="tipo_bactivo">
+                    <option value="">---</option>
+                    {% for tipo in tipos %}
+                        <option value="{{tipo.pk}}">{{tipo.nombre}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+
+            <!-- Provincia 
+            <div class="col-md-4">
+                <label for="provincia_bactivo" class="form-label">Provincia</label>
+                <input type="text" id="filtro_provincia" class="form-control mb-2" placeholder="Buscar provincia...">
+                <div id="provincia_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for provincia in provincias %}
+                    <div class="form-check provincia-item">
+                        <input class="form-check-input" type="checkbox" name="provincia_bactivo" value="{{ provincia.pk }}" id="provincia_{{ provincia.pk }}" onchange="actualizarPoblaciones()">
+                        <label class="form-check-label" for="provincia_{{ provincia.pk }}">
+                            {{ provincia.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div> -->
+            <div class="col-md-4">
+                <label for="provincia_bactivo" class="form-label">Provincia</label>
+                <!-- Campo de filtro -->
+                <input type="text" id="filtro_provincia" class="form-control mb-2" placeholder="Buscar provincia...">
+                
+                <!-- Checkbox para seleccionar/deseleccionar todos -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="seleccionar_todo" onclick="toggleSeleccionarTodoProvincia(this)">
+                    <label class="form-check-label" for="seleccionar_todo">
+                        Seleccionar/Deseleccionar todos
+                    </label>
+                </div>
+
+                <div id="provincia_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for provincia in provincias %}
+                    <div class="form-check provincia-item">
+                        <input class="form-check-input" type="checkbox" name="provincia_bactivo" value="{{ provincia.pk }}" id="provincia_{{ provincia.pk }}" onchange="actualizarPoblaciones()">
+                        <label class="form-check-label" for="provincia_{{ provincia.pk }}">
+                            {{ provincia.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+
+
+            <!-- Población -->
+            <div class="col-md-4">
+                <label for="municipio_bactivo" class="form-label">Población</label>
+
+                <!-- Campo de filtro -->
+                <input type="text" id="filtro_poblacion" class="form-control mb-2" placeholder="Buscar población...">
+                <!-- Checkbox para seleccionar/deseleccionar todos -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="seleccionar_todo" onclick="toggleSeleccionarTodoPoblacion(this)">
+                    <label class="form-check-label" for="seleccionar_todo">
+                        Seleccionar/Deseleccionar todos
+                    </label>
+                </div>
+
+                <div id="municipio_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for poblacion in poblaciones %}
+                    <div class="form-check poblacion-item">
+                        <input class="form-check-input" type="checkbox" name="poblacion_bactivo" value="{{ poblacion.pk }}" id="poblacion_{{ poblacion.pk }}">
+                        <label class="form-check-label" for="poblacion_{{ poblacion.pk }}">
+                            {{ poblacion.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Radio desde centro del municipio (km) -->
+            <div class="col-md-4">
+                <label for="radio_km" class="form-label">Alrededores de la población (km)</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="radio_km" name="radio_km" placeholder="Ej: 10" disabled pattern="^\d+$" title="Introduce solo números enteros">
+                    <span class="input-group-text">km</span>
+                </div>
+            </div>
+                        
+            <!-- <div class="col-md-4">
+                <label for="municipio_bactivo" class="form-label">Población</label>
+                <div id="municipio_bactivo" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                    {% for poblacion in poblaciones %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="poblacion" value="{{ poblacion.pk }}" id="poblacion_{{ poblacion.pk }}">
+                        <label class="form-check-label" for="poblacion_{{ poblacion.pk }}">
+                            {{ poblacion.nombre }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div> -->
+
+
+            <!-- Calle -->
+            <div class="col-md-4">
+                <label class="form-label">Calle</label>
+                <div class="input-group">
+                    <span class="input-group-text">Calle</span>
+                    <input type="text" class="form-control" name="calle_bactivo" id="calle_bactivo">
+                </div>
+            </div>
+
+            <!-- Importe -->
+            <div class="col-md-4">
+                <label class="form-label">Importe</label>
+                <div class="input-group">
+                    <span class="input-group-text">Desde</span>
+                    <input type="number" class="form-control" name="importe_desde_bactivo" id="importe_desde_bactivo">
+                    <span class="input-group-text">Hasta</span>
+                    <input type="number" class="form-control" name="importe_hasta_bactivo" id="importe_hasta_bactivo">
+                </div>
+            </div>
+
+            <!-- M2 -->
+            <div class="col-md-4">
+                <label class="form-label">M2</label>
+                <div class="input-group">
+                    <span class="input-group-text">Desde</span>
+                    <input type="number" class="form-control" name="importe_desde_m2" id="importe_desde_m2">
+                    <span class="input-group-text">Hasta</span>
+                    <input type="number" class="form-control" name="importe_hasta_m2" id="importe_hasta_m2">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Id</label>
+                <input type="text" class="form-control" name="id_bactivo" id="id_bactivo">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Ref. UE</label>
+                <input type="text" class="form-control" name="refue_bactivo" id="refue_bactivo">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Ref. catastral</label>
+                <input type="text" class="form-control" name="refcat_bactivo" id="refcat_bactivo">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Observaciones</label>
+                <input type="text" class="form-control" name="observaciones_bactivo" id="observaciones_bactivo">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Disponibles:</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="radio" name="o_disponibles" id="o_disponibles_todos" value="todos" class="form-check-input">
+                <label for='o_disponibles_todos'>Todos</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="radio" name="o_disponibles" id='o_disponibles_si' value='Si' checked class="form-check-input">
+                <label for='o_disponibles_si'>Sí</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="radio" name="o_disponibles" id='o_disponibles_no' value='No' class="form-check-input">
+                <label for='o_disponibles_no'>No</label>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="c_mostrar_reciente">Solo mostrar el activo más reciente:</label>
+                <input type="checkbox" id="c_mostrar_reciente" name="c_mostrar_reciente" checked class="form-check-input">    
+            </div>
+
+
+            <!-- Botones -->
+            <div class="col-12 mt-3">
+                <button type="button" 
+                        class="btn btn-primary me-2" 
+                        hx-get="/activo/listar/"
+                        hx-target="#div_listado_activo"
+                        hx-include="#proveedor_bactivo, #cartera_bactivo, #categoria_bactivo, #grupo_bactivo, #tipo_bactivo, #provincia_bactivo, #municipio_bactivo, #campanya_fecha_desde_bactivo, #campanya_fecha_hasta_bactivo, #calle_bactivo, #importe_desde_bactivo, #importe_hasta_bactivo, #id_bactivo, #refue_bactivo, #refcat_bactivo, #observaciones_bactivo, [name='o_disponibles'], [id='c_mostrar_reciente'], #importe_desde_m2, #importe_hasta_m2, #radio_km"
+                        hx-trigger="click">
+                    Filtrar
+                </button>
+                <button type="button" class='btn btn-secondary' onclick='ActualizaDatosCatastroFiltro()'>Actualiza Datos Catastro</button>
+                <button type="button" class="btn btn-success" onclick="ImprimirBActivos(false)">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+                <button type="button" class="btn btn-warning" onclick="ImprimirBActivos(true)">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="div_listado_activo" class="mt-4">
+        <!-- Aquí se mostrará el listado de activos -->
+    </div>
+</div>
+
+<div class="modal fade" id="mapaActivosModal" tabindex="-1" aria-labelledby="mapaActivosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Mapa de activos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body" id="contenedorMapa" style="height: 600px;">
+          <!-- Aquí se cargará el mapa dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        const proveedorSelect = document.getElementById("proveedor_bactivo");
+        const carteraSelect = document.getElementById("cartera_bactivo");
+        const grupoSelect = document.getElementById("grupo_bactivo");
+        const tipoSelect = document.getElementById("tipo_bactivo");
+        const provinciaSelect = document.querySelectorAll("#provincia_bactivo .form-check-input");
+        //const provinciaSelect = document.getElementById("provincia_bactivo");
+        const municipioSelect = document.getElementById("municipio_bactivo");
+
+        proveedorSelect.addEventListener("change", function() {
+            const proveedorId = this.value;
+            if (proveedorId) {
+                fetch(`{% url 'apicampanya' %}?proveedor=${proveedorId}&accion=cargar_carteras`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpiar las opciones de cartera
+                        carteraSelect.innerHTML = '<option value="">---------</option>';
+                        // Agregar las nuevas opciones de cartera
+                        data.forEach(function(cartera) {
+                            const option = document.createElement("option");
+                            option.value = cartera.id;
+                            option.textContent = cartera.codigo + ". " + cartera.nombre;
+                            carteraSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error("Error al cargar carteras:", error));
+            } else {
+                // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+                let option;
+                carteraSelect.innerHTML = '<option value="">---------</option>';
+            }
+        });
+
+
+        grupoSelect.addEventListener("change", function() {
+            const grupoId = this.value;
+            if (grupoId) {
+                fetch(`{% url 'apicampanya' %}?grupo=${grupoId}&accion=cargar_tipologias`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpiar las opciones de cartera
+                        tipoSelect.innerHTML = '<option value="">---------</option>';
+                        // Agregar las nuevas opciones de cartera
+                        data.forEach(function(poblacion) {
+                            const option = document.createElement("option");
+                            option.value = poblacion.id;
+                            option.textContent = poblacion.nombre;
+                            tipoSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error("Error al cargar carteras:", error));
+            } else {
+                // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+                let option;
+                tipoSelect.innerHTML = '<option value="">---------</option>';
+            }
+        });
+    });
+
+
+        //provinciaSelect.addEventListener("change", function() {
+        
+            // const provinciaId = this.value;
+            // if (provinciaId) {
+            //     fetch(`{% url 'apicampanya' %}?provincia=${provinciaId}&accion=cargar_poblaciones`)
+            //         .then(response => response.json())
+            //         .then(data => {
+            //             // Limpiar las opciones de cartera
+            //             municipioSelect.innerHTML = '<option value="">---------</option>';
+            //             // Agregar las nuevas opciones de cartera
+            //             data.forEach(function(poblacion) {
+            //                 const option = document.createElement("option");
+            //                 option.value = poblacion.id;
+            //                 option.textContent = poblacion.nombre;
+            //                 municipioSelect.appendChild(option);
+            //             });
+            //         })
+            //         .catch(error => console.error("Error al cargar carteras:", error));
+            // } else {
+            //     // Si no hay proveedor seleccionado, limpiar las opciones de cartera
+            //     let option;
+            //     municipioSelect.innerHTML = '<option value="">---------</option>';
+            // }
+        //});
+
+
+        function actualizarPoblaciones() {
+            const checkboxesProvincia = document.querySelectorAll("#provincia_bactivo .form-check-input");
+            let provinciasSeleccionadas = [];
+            checkboxesProvincia.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    provinciasSeleccionadas.push(checkbox.value);
+                }
+            });
+        
+            const checkboxesMunicipio = document.querySelectorAll("#municipio_bactivo .form-check-input");
+            let municipiosSeleccionados = [];
+            checkboxesMunicipio.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    municipiosSeleccionados.push(checkbox.value);
+                }
+            });
+        
+            const provinciasSeleccionadasStr = provinciasSeleccionadas.join(',');
+        
+            fetch(`{% url 'apicampanya' %}?provincia=${provinciasSeleccionadasStr}&accion=cargar_poblaciones`)
+                .then(response => response.json())
+                .then(data => {
+                    municipio_bactivo.innerHTML = data.html;
+        
+                    municipiosSeleccionados.forEach(function (valor) {
+                        const checkbox = municipio_bactivo.querySelector(`input.form-check-input[value="${valor}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                        }
+                    });
+        
+                    asignarEventoRadioKm();
+                })
+                .catch(error => showAlert("Error al cargar carteras:", error, 'danger'));
+        }
+        
+    
+    function actualizarCarteras(){
+        const checkboxes = document.querySelectorAll("#proveedor_bactivo .form-check-input");
+        proveedoresSeleccionados = [];
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                proveedoresSeleccionados.push(checkbox.value);
+            }
+        });
+        const proveedoresSeleccionadosStr = proveedoresSeleccionados.join(',');
+        fetch(`{% url 'apicampanya' %}?proveedor=${proveedoresSeleccionadosStr}&accion=cargar_carteras`)
+            .then(response => response.json())
+            .then(data => {
+                cartera_bactivo.innerHTML=data.html
+            })
+            .catch(error => showAlert("Error al cargar carteras:", error, 'danger'));
+    }
+
+    function actualizarTipologias(){
+        const checkboxes = document.querySelectorAll("#grupo_bactivo .form-check-input");
+        gruposSeleccionados = [];
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                gruposSeleccionados.push(checkbox.value);
+            }
+        });
+        const gruposSeleccionadosStr = gruposSeleccionados.join(',');
+        fetch(`{% url 'apicampanya' %}?grupo=${gruposSeleccionadosStr}&accion=cargar_tipologias`)
+            .then(response => response.json())
+            .then(data => {
+                tipo_bactivo.innerHTML=data.html
+            })
+            .catch(error => showAlert("Error al cargar tipologias:", error, 'danger'));
+    }
+
+    document.querySelector("#div_listado_activo").addEventListener("htmx:afterSettle", function() {
+        document.getElementById("bot_catastro_activo_list").classList.add("d-none")
+        document.getElementById("bot_imprimir_activo_list").classList.add("d-none")
+        document.getElementById("bot_excel_activo_list").classList.add("d-none")
+        const elementos = document.querySelectorAll(`[name="filtro_dropdown"]`);
+        elementos.forEach(elemento => {
+            elemento.style.display = "none";
+        });
+    });
+
+    function EliminarCampanya(id_campanya){
+        if (confirm('¿Estás seguro de que deseas eliminar esta campaña?')){
+            const baseUrl = '{{RUTA_PROYECTO}}/campanya/api/';
+                const params = new URLSearchParams({
+                    accion:'eliminar_campanya',
+                    id_campanya
+                });
+                const url = `${baseUrl}?${params.toString()}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                    }
+                };
+                fetch(url, options)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la solicitud: ' + response.statusText);
+                        }
+                        return response.json(); // Convertimos la respuesta a JSON
+                    })
+                    .then(data => {
+                        if (data.error){
+                            showAlert(data.literror, 'danger');
+                        }else{
+                            document.getElementById("tr_campanya" + id_campanya).remove()
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error en el fetch:', error, 'danger');
+                    });
+        }
+    }
+    function obtenerProveedoresSeleccionados() {
+        const checkboxes = document.querySelectorAll('#proveedor_bactivo .form-check-input:checked');
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);        
+        return valoresSeleccionados;
+    }
+
+    function obtenerCarterasSeleccionadas() {
+        const checkboxes = document.querySelectorAll('#cartera_bactivo .form-check-input:checked');
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);        
+        return valoresSeleccionados;
+    }
+
+    function obtenerCategoriasSeleccionadas() {
+        const checkboxes = document.querySelectorAll('#categoria_bactivo .form-check-input:checked');
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);        
+        return valoresSeleccionados;
+    }
+
+    function obtenerGruposSeleccionados() {
+        const checkboxes = document.querySelectorAll('#grupo_bactivo .form-check-input:checked');
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);        
+        return valoresSeleccionados;
+    }
+
+    function obtenerTiposSeleccionados(){
+        const checkboxes = document.querySelectorAll('#tipo_bactivo .form-check-input:checked');
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);        
+        return valoresSeleccionados;
+    }    
+
+    function obtenerProvinciasSeleccionadas() {
+        // Selecciona todas las casillas de verificación marcadas dentro del contenedor #provincia_bactivo
+        const checkboxes = document.querySelectorAll('#provincia_bactivo .form-check-input:checked');
+        
+        // Obtiene los valores de las casillas seleccionadas
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);
+        
+        return valoresSeleccionados;
+    }
+
+    function obtenerMunicipiosSeleccionados() {
+        // Selecciona todas las casillas de verificación marcadas dentro del contenedor #municipio_bactivo
+        const checkboxes = document.querySelectorAll('#municipio_bactivo .form-check-input:checked');
+        
+        // Obtiene los valores de las casillas seleccionadas
+        const valoresSeleccionados = Array.from(checkboxes).map(checkbox => checkbox.value);
+        
+        return valoresSeleccionados;
+    }
+    
+    function ImprimirBActivos(es_excel=false){
+    
+        let check = [];
+        document.querySelectorAll("td[name='col_seleccionar'] input[type='checkbox']:checked").forEach(checkbox => {
+            check.push(checkbox.value)
+        });
+        const msgEsperando = document.getElementById("msgesperando");
+        if (msgEsperando) {
+            msgEsperando.classList.remove("d-none");
+        }
+
+        document.getElementById('o_disponibles_si')        
+        const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+        const lineas_id = check.join(",");
+        const params = new URLSearchParams({
+            accion:'imprimir_activos',
+            proveedor: obtenerProveedoresSeleccionados(), //document.getElementById("proveedor_bactivo").value,
+            cartera: obtenerCarterasSeleccionadas(), //document.getElementById("cartera_bactivo").value,
+            clasif: obtenerCategoriasSeleccionadas(), //document.getElementById("categoria_bactivo").value,
+            grupo: obtenerGruposSeleccionados(), //document.getElementById("grupo_bactivo").value,
+            tipo: obtenerTiposSeleccionados(), //document.getElementById("tipo_bactivo").value,
+            lineas_id: lineas_id,
+            provincia: obtenerProvinciasSeleccionadas(),
+            poblacion: obtenerMunicipiosSeleccionados(),
+            calle: document.getElementById("calle_bactivo").value,
+            fecha_desde: document.getElementById("campanya_fecha_desde_bactivo").value,
+            fecha_hasta: document.getElementById("campanya_fecha_hasta_bactivo").value,
+            precio_desde: document.getElementById("importe_desde_bactivo").value,
+            precio_hasta: document.getElementById("importe_hasta_bactivo").value,
+            importe_desde_m2: document.getElementById("importe_desde_m2").value,
+            importe_hasta_m2: document.getElementById("importe_hasta_m2").value,
+            idprov: document.getElementById("id_bactivo").value,
+            refue: document.getElementById("refue_bactivo").value,
+            refcat: document.getElementById("refcat_bactivo").value,
+            disponible: document.querySelector('input[name="o_disponibles"]:checked').value,
+            mostrar_reciente: document.getElementById('c_mostrar_reciente').checked,
+            radio_km: document.getElementById('radio_km').value,
+            observaciones: document.getElementById('observaciones_bactivo').value,
+            es_excel
+        });
+        const url = `${baseUrl}?${params.toString()}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+            }
+        };
+        fetch(url, options)
+            .then(response => {
+                if (msgEsperando) {
+                        msgEsperando.classList.add("d-none");
+                    }
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud: ' + response.statusText);
+                }
+                return response.json(); // Convertimos la respuesta a JSON
+            })
+            .then(data => {
+                window.open('{{RUTA_PROYECTO}}/media/' + data.nombrefichero);
+            })
+            .catch(error => {
+                if (msgEsperando) {
+                        msgEsperando.classList.add("d-none");
+                    }
+                showAlert('Error en el fetch:', error, 'danger');
+            }) 
+        
+    }
+    function ActualizaDatosCatastroFiltro(){
+        const loader = document.getElementById("loader");
+
+        loader.style.display = "block";
+
+        const baseUrl = '{{RUTA_PROYECTO}}/activo/api/';
+        const params = new URLSearchParams({
+            accion:'obtener_catastro',
+            proveedor: obtenerProveedoresSeleccionados(), // document.getElementById("proveedor_bactivo").value,
+            cartera: obtenerCarterasSeleccionadas(), // document.getElementById("cartera_bactivo").value,
+            clasif: obtenerCategoriasSeleccionadas(), // document.getElementById("categoria_bactivo").value,
+            grupo: obtenerGruposSeleccionados(), // document.getElementById("grupo_bactivo").value,
+            tipo: obtenerTiposSeleccionados(), // document.getElementById("tipo_bactivo").value,
+            provincia: obtenerProvinciasSeleccionadas(),
+            poblacion: obtenerMunicipiosSeleccionados(),
+            calle: document.getElementById("calle_bactivo").value,
+            fecha_desde: document.getElementById("campanya_fecha_desde_bactivo").value,
+            fecha_hasta: document.getElementById("campanya_fecha_hasta_bactivo").value,
+            precio_desde: document.getElementById("importe_desde_bactivo").value,
+            precio_hasta: document.getElementById("importe_hasta_bactivo").value,
+            m2desde: document.getElementById("importe_desde_m2").value,
+            m2hasta: document.getElementById("importe_hasta_m2").value,
+            refue: document.getElementById("refue_bactivo").value,
+            refcat: document.getElementById("refcat_bactivo").value,
+            disponible: document.querySelector('input[name="o_disponibles"]:checked').value,
+            observaciones: document.getElementById('observaciones_bactivo').value,
+
+        });
+        const url = `${baseUrl}?${params.toString()}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+            }
+        };
+        fetch(url, options)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud: ' + response.statusText);
+                }
+                return response.json(); // Convertimos la respuesta a JSON
+            })
+            .then(data => {
+                showAlert("Datos del catastro actualizados", 'success');
+            })
+            .catch(error => {
+                showAlert('Error en el fetch:', error, 'danger');
+            }) 
+        loader.style.display = "none"; // Ocultar loader
+    }
+
+    function scrollToElement(id_elemento) {
+        const element = document.getElementById(id_elemento);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+            });
+        }
+    }
+
+
+    // Función para filtrar las proveedores
+    const filtroInputProveedor = document.getElementById('filtro_proveedor');
+    filtroInputProveedor.addEventListener('input', function() {
+        let proveedoresDiv = document.getElementById('proveedor_bactivo');
+        let proveedoresItems = proveedoresDiv.getElementsByClassName('proveedor-item');
+        
+        let filtroValor = filtroInputProveedor.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        // Iterar sobre todas las proveedores y mostrar solo las que coincidan con el filtro
+        for (let item of proveedoresItems) {
+            const nombreProveedor = item.querySelector('label').textContent.toLowerCase();
+            if (nombreProveedor.includes(filtroValor)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+    function toggleSeleccionarTodoProveedor(source) {
+        const checkboxes = document.querySelectorAll('#proveedor_bactivo .form-check-input');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    // Función para filtrar las carteras
+    const filtroInputCartera = document.getElementById('filtro_cartera');
+    filtroInputCartera.addEventListener('input', function() {
+        let carterasDiv = document.getElementById('cartera_bactivo');
+        let carterasItems = carterasDiv.getElementsByClassName('cartera-item');
+        
+        let filtroValor = filtroInputCartera.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        for (let item of carterasItems) {
+            const nombreCartera = item.querySelector('label').textContent.toLowerCase();
+            if (nombreCartera.includes(filtroValor)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+    function toggleSeleccionarTodoCartera(source) {
+        const checkboxes = document.querySelectorAll('#cartera_bactivo .form-check-input');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    // Función para filtrar las grupos
+    const filtroInputGrupo = document.getElementById('filtro_grupo');
+    filtroInputGrupo.addEventListener('input', function() {
+        let gruposDiv = document.getElementById('grupo_bactivo');
+        let gruposItems = gruposDiv.getElementsByClassName('grupo-item');
+        
+        let filtroValor = filtroInputGrupo.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        // Iterar sobre todas las grupos y mostrar solo las que coincidan con el filtro
+        for (let item of gruposItems) {
+            const nombreGrupo = item.querySelector('label').textContent.toLowerCase();
+            if (nombreGrupo.includes(filtroValor)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+    function toggleSeleccionarTodoGrupo(source) {
+        const checkboxes = document.querySelectorAll('#grupo_bactivo .form-check-input');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    // Función para filtrar las tipologia
+    const filtroInputTipologia = document.getElementById('filtro_tipologia');
+    filtroInputTipologia.addEventListener('input', function() {
+        let tipologiasDiv = document.getElementById('tipo_bactivo');
+        let tipologiasItems = tipologiasDiv.getElementsByClassName('tipo-item');
+        
+        let filtroValor = filtroInputTipologia.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        for (let item of tipologiasItems) {
+            const nombreTipologia = item.querySelector('label').textContent.toLowerCase();
+            if (nombreTipologia.includes(filtroValor)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+    function toggleSeleccionarTodoTipologia(source) {
+        const checkboxes = document.querySelectorAll('#tipo_bactivo .form-check-input');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    // Función para filtrar las poblaciones
+    const filtroInput = document.getElementById('filtro_poblacion');
+    filtroInput.addEventListener('input', function() {
+        let poblacionesDiv = document.getElementById('municipio_bactivo');
+        let poblacionItems = poblacionesDiv.getElementsByClassName('poblacion-item');
+
+        let filtroValor = filtroInput.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        // Iterar sobre todas las poblaciones y mostrar solo las que coincidan con el filtro
+        for (let item of poblacionItems) {
+            const nombrePoblacion = item.querySelector('label').textContent.toLowerCase();
+            if (nombrePoblacion.includes(filtroValor)) {
+                item.style.display = ''; // Mostrar la población
+            } else {
+                item.style.display = 'none'; // Ocultar la población
+            }
+        }
+    });
+    function toggleSeleccionarTodoPoblacion(source) {
+        // Obtener todos los checkboxes dentro del contenedor
+        const checkboxes = document.querySelectorAll('#municipio_bactivo .form-check-input');
+
+        // Cambiar el estado de cada checkbox secundario según el estado del principal
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    // Función para filtrar las provincias
+    const filtroInputProv = document.getElementById('filtro_provincia');
+    filtroInputProv.addEventListener('input', function() {
+        let provinciasDiv = document.getElementById('provincia_bactivo');
+        let provinciaItems = provinciasDiv.getElementsByClassName('provincia-item');
+
+        let filtroValor = filtroInputProv.value.toLowerCase(); // Convertir a minúsculas para comparación insensible al caso
+
+        // Iterar sobre todas las provincias y mostrar solo las que coincidan con el filtro
+        for (let item of provinciaItems) {
+            const nombreProvincia = item.querySelector('label').textContent.toLowerCase();
+            if (nombreProvincia.includes(filtroValor)) {
+                item.style.display = ''; // Mostrar la población
+            } else {
+                item.style.display = 'none'; // Ocultar la población
+            }
+        }
+    });
+    function toggleSeleccionarTodoProvincia(source) {
+        // Obtener todos los checkboxes dentro del contenedor
+        const checkboxes = document.querySelectorAll('#provincia_bactivo .form-check-input');
+
+        // Cambiar el estado de cada checkbox secundario según el estado del principal
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    function asignarEventoRadioKm() {
+        document.querySelectorAll('#municipio_bactivo .form-check-input').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const seleccionados = document.querySelectorAll('#municipio_bactivo .form-check-input:checked');
+                document.getElementById('radio_km').disabled = seleccionados.length !== 1;
+            });
+        });
+    }
+
+
+</script>
+{% endblock %}

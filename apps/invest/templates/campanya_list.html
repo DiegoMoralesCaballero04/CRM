@@ -1,0 +1,62 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+
+{% block contenido %}
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Proveedor</th>
+                    <th scope="col">Cartera</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col" class='text-end'>Activos <span class="badge badge-light" style='background-color: white; color: black'>{{num_activos}}</span></th>
+                    <th scope="col" class='text-end'>Seleccionados</th>
+                    <th scope="col" class='text-end'>Propuestas enviadas</th>
+                    <th scope="col" class='text-end'>Activos trabajados</th>
+                    <th scope="col" class='text-end'>Propuestas aceptadas</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for campanya in campanyas %}
+                    <tr id='tr_campanya{{campanya.pk}}'>
+                        <td>
+                            <a href="#"
+                                hx-get="/campanya/{{ campanya.id }}/"
+                                hx-target="#div_ficha_campanya"
+                                hx-trigger="click"
+                                onclick="scrollToElement('div_ficha_campanya')">
+                                {{ campanya.fecha|date:"d-m-Y" }}
+                            </a>
+                        </td>
+                        <td>{{ campanya.proveedor.nombre }}</td>
+                        <td>{{ campanya.cartera.nombre }}</td>
+                        <td>{{ campanya.tipo }}</td>
+                        <td class='text-end'>{{ campanya.ActivosTotales }}</td>
+                        <td class='text-end'>{{ campanya.ActivosSeleccionados }}</td>
+                        <td class='text-end'>{{ campanya.PropuestasEnviadas }}</td>
+                        <td class='text-end'>{{ campanya.PropuestasTrabajadas }}</td>
+                        <td class='text-end'>{{ campanya.PropuestasAceptadas }}</td>
+                        <td>
+                            <a href="{% url 'editarcampanya' campanya.pk %}" class="text-primary me-2" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="#" class="text-danger" title="Eliminar" aria-label="Eliminar" onclick="EliminarCampanya({{campanya.pk}})">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id='div_ficha_campanya'></div>
+    
+
+{% endblock %}
+
+
+
+
+

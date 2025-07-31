@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+<!-- {-% load crispy_forms_tags %-} -->
+
+{% block style_css %} 
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header1 {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .form-label {
+            font-weight: bold;
+        }
+
+        .dropzone {
+            border: 2px dashed #007bff;
+            padding: 30px;
+            text-align: center;
+            color: #007bff;
+            background-color: #e9f4ff;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .dropzone.dragover {
+            background-color: #cce5ff;
+        }
+
+        .images-container img {
+            width: 100px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block contenido %}
+
+ <div class="col-12 text-end">
+        <a href="/cliente/"><button class='btn btn-secondary'>Volver a inversores</button></a>
+    </div>
+<div class="container mt-5" style="max-width: 100%">
+        {% if form.errors or form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            <h5 class="alert-heading">¡Se encontraron errores en el formulario!</h5>
+            <p>Por favor, corrija los siguientes errores antes de continuar:</p>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li>
+                        <strong>{{ field|title }}:</strong> {{ errors|join:", " }}
+                    </li>
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <div class="row">
+            <!-- Left Column with Form -->
+            <div class="col-md-8">
+                <div class="card" style="max-width:800px">
+                    <div class="card-header card-header1">Inversor</div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="tipo" class="form-label">Responsable</label>
+                                    <select class="form-select" name="responsable" id='s_responsable'>
+                                        {% for responsable in responsables %}                                        
+                                            <option value="{{ responsable.pk }}">
+                                                {{ responsable.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class="col-md-4 mb-3">
+                                    <label for="codigo" class="form-label">Código</label>
+                                    <input type="text" class="form-control" id="codigo" name='codigo' placeholder="Código" {% if form.codigo.value %} value='{{form.codigo.value}}' {% endif %}>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class='col-md-6 text-end'>
+                                    <input type="radio" name="tipo" value='F' id='tipo_F' onclick='SelecccionaTipoCliente("F")'> Persona física</label>
+                                    <label class='col-md-6 text-start'>
+                                    <input type="radio" name="tipo" value='J' id='tipo_J' onclick='SelecccionaTipoCliente("J")'> Persona jurídica</label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="row" id='div_persona_fisica'>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="nombre" class="form-label">Nombre</label>
+                                        <input type="text" class="form-control" id="nombre" name='nombre' placeholder="Nombre" {% if form.nombre.value %} value='{{form.nombre.value}}' {% endif %}>
+                                    </div>
+                                    <div class="col-md-8 mb-3">
+                                        <label for="apellidos" class="form-label">Apellidos</label>
+                                        <input type="text" class="form-control" id="apellidos" name='apellidos' placeholder="Apellidos" {% if form.apellidos.value %}  value='{{form.apellidos.value}}'
+                                        {% endif %}>
+                                    </div>
+                                </div>
+                                <div class="row d-none" id='div_persona_juridica'>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="razonsocial" class="form-label">Razón social</label>
+                                        <input type="text" class="form-control" id="apellidos" name='nombre_completo' placeholder="Razón social" {% if form.nombre_completo.value %} value='{{form.nombre_completo.value}}' {% endif %}>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="contacto" class="form-label">Contacto</label>
+                                        <input type="text" class="form-control" id="contacto" name='contacto' placeholder="Contacto" {% if form.contacto.value %} value='{{form.contacto.value}}' {% endif %} >
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="telefono" class="form-label">Teléfono</label>
+                                    <input type="text" class="form-control" id="telefono" name='telefono' placeholder="Teléfono" {% if form.telefono.value %} value='{{form.telefono.value}}' {% endif %}>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="correo" class="form-label">Correo</label>
+                                    <input type="text" class="form-control" id="correo" name='correo' placeholder="Correo" {% if form.correo.value %} value='{{form.correo.value}}' {% endif %} required>
+                                    <input type="text" class="form-control" id="correo_2" name='correo_2' placeholder="Correo 2" {% if form.correo_2.value %} value='{{form.correo_2.value}}' {% endif %}>
+                                    <input type="text" class="form-control" id="correo_3" name='correo_3' placeholder="Correo 3" {% if form.correo_3.value %} value='{{form.correo_3.value}}' {% endif %}>
+                                </div>
+
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="direccion" class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="direccion" name='direccion' placeholder="Dirección" {% if form.direccion.value %} value='{{form.direccion.value}}' {% endif %}>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="cp" class="form-label">C.P.</label>
+                                    <input type="text" class="form-control" id="cp" name='cp' placeholder="cp" {% if form.cp.value %} value='{{form.cp.value}}' {% endif %}>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label for="poblacion" class="form-label">Población</label>
+                                    <input type="text" class="form-control" id="poblacion" name='poblacion' placeholder="Población" {% if form.poblacion.value %} value='{{form.poblacion.value}}' {% endif %}>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="provincia" class="form-label">Provincia</label>
+                                    <input type="text" class="form-control" id="provincia" name='provincia' placeholder="Provincia" {% if form.provincia.value %} value='{{form.provincia.value}}' {% endif %}>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label for="observaciones" class="form-label">Zona</label>
+                                        <textarea class="form-control" id="zona" name="zona" rows="3">{% if form.zona.value %} {{ form.zona.value }} {% endif %}</textarea>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label for="observaciones" class="form-label">Observaciones</label>
+                                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3">{% if form.observaciones.value %} {{ form.observaciones.value }} {% endif %}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% bootstrap_button button_type="submit" content="Guardar" %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                {% if not self.object %}
+                <div class="card">
+                    <div class="card-header card-header1">Documentación</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {% for nif in nifs %}
+                                    <div class='row' id='div_imagen_{{nif.pk}}'>
+                                        {% if ".jpg" in nif.documento.url or ".jpeg" in nif.documento.url or ".png" in nif.documento.url %}
+                                            <img src="{{ nif.documento.url }}" class="col-md-11">
+                                        {% elif ".pdf" in nif.documento.url %}
+                                            <!-- Muestra un icono de PDF y un enlace al archivo -->
+                                            {{ nif.documento.name }}
+                                            <a href="{{ nif.documento.url }}" target="_blank" class="col-md-11">
+                                                <i class="bi bi-filetype-pdf" alt='PDF' style="width:30px; height:auto;"></i>
+                                                Ver documento PDF
+                                            </a>
+                                        {% elif ".xls" in nif.documento.url or ".xlsx" in nif.documento.url %}
+                                            <!-- Muestra un icono de Excel y un enlace al archivo -->
+                                            {{ nif.documento.name }}
+                                            <a href="{{ nif.documento.url }}" target="_blank" class="col-md-11">
+                                                <i class="bi bi-file-earmark-excel" alt='Excel' style="width:30px; height:auto;"></i>
+                                                Ver documento Excel
+                                            </a>
+                                        {% elif nif.documento.url.endswith == ".doc" or nif.documento.url.endswith == ".docx" %}
+                                            {{ nif.documento.name }}
+                                            <!-- Muestra un icono de Word y un enlace al archivo -->
+                                            <a href="{{ nif.documento.url }}" target="_blank" class="col-md-11">
+                                                <i class="bi bi-file-earmark-word" alt='Word' style="width:30px; height:auto;"></i>
+                                                Ver documento Word
+                                            </a>
+                                        {% else %}
+                                            <!-- Icono genérico para otros tipos de archivos -->
+                                            <a href="{{ nif.documento.url }}" target="_blank" class="col-md-11">
+                                                <i class="bi bi-file-earmark-plus" alt='Otros' style="width:30px; height:auto;"></i>
+                                                Ver archivo
+                                            </a>
+                                        {% endif %}
+                                        <button class="btn btn-xs btn-danger col-md-1" style="max-height:40px" title="Eliminar imagen" onclick="EliminarImagenCliente({{ nif.pk }})">X</button>
+                                    </div>
+                                {% endfor %}
+                                <div class="dropzone" id="dropzoneDoc">
+                                    Arrastra y suelta aquí tus documentos o haz clic para subir.
+                                </div>
+                                <input type="file" id="inputFiles" multiple style="display:none;">                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    
+    window.onload = (event) => {
+        {% if object.pk %}
+            document.getElementById("s_responsable").value={{object.responsable.pk}}
+            SelecccionaTipoCliente("{{object.tipo}}")
+        {% endif %}
+    };
+
+
+    function SelecccionaTipoCliente(id_elemento) {
+        if (id_elemento=='F'){
+            document.getElementById("tipo_F").checked = true;
+            document.getElementById("div_persona_fisica").classList.remove('d-none');
+            document.getElementById("div_persona_juridica").classList.add('d-none');
+        }else{
+            document.getElementById("tipo_J").checked = true;
+            document.getElementById("div_persona_fisica").classList.add('d-none');
+            document.getElementById("div_persona_juridica").classList.remove('d-none');
+
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropzone = document.getElementById('dropzoneDoc');
+        const inputFiles = document.getElementById('inputFiles');
+
+        // Permitir que se abra el explorador de archivos al hacer clic en la dropzone
+        dropzone.addEventListener('click', function () {
+            inputFiles.click();
+        });
+
+        // Enviar los archivos seleccionados al seleccionar en el explorador de archivos
+        inputFiles.addEventListener('change', function (event) {
+            handleFiles(event.target.files);
+        });
+
+        // Permitir arrastrar y soltar archivos en la dropzone
+        dropzone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            dropzone.classList.add('hover');
+        });
+
+        dropzone.addEventListener('dragleave', function () {
+            dropzone.classList.remove('hover');
+        });
+
+        dropzone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            dropzone.classList.remove('hover');
+            const files = event.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // Función para procesar los archivos y realizar el POST
+        function handleFiles(files) {
+            const formData = new FormData();
+
+            // Agregar cada archivo al FormData
+            for (let i = 0; i < files.length; i++) {
+                formData.append('file', files[i]);
+            }
+
+            // Agregar el campo adicional 'accion'
+            formData.append('accion', 'almacenar_nif');
+            formData.append('id_cliente', '{{object.pk}}');
+
+            // Realizar el POST a tu endpoint
+            fetch('/cliente/api/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}' // Incluyendo el token CSRF en el encabezado para seguridad
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    showAlert('Error al subir el archivo', 'danger');
+                    throw new Error('Error al subir el archivo');
+                }
+            })
+            .then(data => {
+                showAlert('Archivo subido con éxito.', 'success');
+                window.location.reload()
+            })
+            .catch(error => {
+                showAlert('Error al subir el archivo.', 'danger');
+            });
+        }
+    });
+
+    function EliminarImagenCliente(id_elemento){
+        if (confirm("¿Desea eliminar este documento?")){
+            const baseUrl = '{{RUTA_PROYECTO}}/cliente/api/';
+            const params = {
+                accion:'eliminar_documento',
+                id_cliente: '{{object.pk}}',
+                id_elemento: id_elemento
+            };
+            const url = '/cliente/api/';
+            const options = {
+                method: 'POST',
+                body: JSON.stringify(params),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            };
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        showAlert('Error en la solicitud: ' + response.statusText, 'danger');
+                        throw new Error('Error en la solicitud: ' + response.statusText);
+                    }
+                    return response.json(); // Convertimos la respuesta a JSON
+                })
+                .then(data => {
+                    if (data.error){
+                        showAlert(data.literror, 'danger');
+                    }else{
+                        document.getElementById('div_imagen_'+ id_elemento).remove()
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error en el fetch:', error, 'danger');
+                });
+        }
+    }
+
+</script>
+{% endblock %}

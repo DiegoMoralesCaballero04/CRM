@@ -1,0 +1,56 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+
+{% block contenido %}
+    <div class="container mb-3" >
+        <div class="table-responsive " style="max-width:1200px;" >
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Nombre</th>
+                        {% if not activo %}
+                            <th scope="col">Correo</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Responsable</th>
+                            <th scope="col"></th>
+                            <th scope="col">Usuario</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                        <tr>
+                            {% if not activo %}
+                                <!-- No existe hx-target '#div_ficha_cliente' 8/4/25-->
+                                <td hx-get="/cliente/{{cliente.pk}}/" hx-trigger="click" hx-target="#main-content" style='cursor: pointer;'>{{ cliente.DameNombre }}</td>
+                                <!--<td hx-get="/cliente/{{cliente.pk}}/" hx-trigger="click" hx-target="#div_ficha_cliente" style='cursor: pointer;'>{{ cliente.DameNombre }}</td>
+-->
+                                <td >{{ cliente.correo }}</td>
+                                <td >{{ cliente.telefono }}</td>
+                                <td >{% if cliente.responsable %}
+                                        {{cliente.responsable.nombre}}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'editarcliente' cliente.pk %}" class="text-primary me-2" title="Editar" aria-label="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'eliminarcliente' cliente.pk %}" class="text-danger" title="Eliminar" aria-label="Eliminar" onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?');">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </a>
+                                </td>
+                                <td >{% if cliente.DameUsuario %}
+                                        <i class="bi bi-check-circle-fill text-success" title='Usuario activo'></i>
+                                    {% endif %}
+                                </td>
+                                
+                            {% else %}
+                                <td hx-get="/activo/api/?accion=enviar_propuesta&clientes_id={{cliente.pk}}&activos_id={{activo.pk}}&tipo=directo" hx-trigger="click" hx-target="#div_ficha_cliente" style='cursor: pointer;'>{{ cliente.DameNombre }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}

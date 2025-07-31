@@ -1,0 +1,67 @@
+{% extends 'base_htmx.html' %}
+
+{% block contenido %}
+    {% if ofertas %}
+        <div  scope='col' class="table-responsive" class='col-12' id='div_activos'>                
+            <table class="table table-striped table-hover col-12">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for oferta in ofertas %}
+                        <tr name='tr_resultado'>
+                            <td>{{ oferta.creado_en }}</td>
+                            <td>{{ oferta.cliente.DameNombre }}</td>
+                            <td>{{ oferta.DameEstado }}</td>
+                            <td>
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#activoModal" style="margin: 0px; padding:0px;">
+                                    <a href="#" hx-get="/activo/{{oferta.activo.id}}/" hx-target="#body_activoModal" style="text-decoration: none;">
+                                        🔎
+                                    </a>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+    {% if not user.cliente %}
+        <button type="button" class="btn btn-primary" style="margin: 0px;" onclick='MostrarCrearNuevaOferta()' id='btn_nuevaoferta'>Crear nueva propuesta</button>
+        <div class='col-12 m-3 d-none' id='div_nuevapropuesta'>
+            <h5>Nueva propuesta</h5>
+            <label>Nombre del cliente</label>
+            <input type="text" id="txt_nombre_nuevaoferta" name='nombre'>
+            <input type="text" class="d-none" id="txt_idactivo_nuevaoferta" name='activo' value='{{activo.pk}}'>
+            <button type="button" 
+                    class="btn btn-primary" 
+                    title="Me interesa" 
+                    hx-get="/cliente/listar/"
+                    hx-target="#div_clientes_nuevaoferta"
+                    hx-include="#txt_nombre_nuevaoferta, #txt_idactivo_nuevaoferta" 
+                    hx-trigger="click">
+                    Filtrar
+            </button>
+        </div>
+        <div class='col-12 m-3' id='div_clientes_nuevaoferta'>
+
+        </div>
+        <script>
+            function MostrarCrearNuevaOferta(){
+                const div_nuevapropuesta = document.getElementById('div_nuevapropuesta');
+                if (div_nuevapropuesta.classList.contains("d-none")){
+                    div_nuevapropuesta.classList.remove("d-none")
+                }
+            }
+
+        </script>
+    {% endif %}
+
+
+{% endblock %}
+

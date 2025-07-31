@@ -1,0 +1,638 @@
+{% extends request.htmx|yesno:"base_htmx.html,base.html" %}
+
+{% block contenido %}
+    <input type="number" id="txt_mirepresentante_oferta" value='{{mirepresentante_id}}' class='d-none'>
+    <input type="number" id="txt_micliente_oferta" value='{{micliente_id}}' class='d-none'>
+
+    <input type="text" id="txt_miclasif_oferta" value='{{miclasif}}' class='d-none'>
+    <input type="number" id="txt_migrupo_oferta" value='{{migrupo_id}}' class='d-none'>
+    <input type="number" id="txt_mitipo_oferta" value='{{mitipo_id}}' class='d-none'>
+    <input type="number" id="txt_mipoblacion_oferta" value='{{mipoblacion_id}}' class='d-none'>
+    <input type="number" id="txt_miprovincia_oferta" value='{{miprovincia_id}}' class='d-none'>
+
+    <div class="container col-12">
+        <div class="table-actions col-12 d-flex">
+            {% if propuestapendiente or not user.cliente %}
+                <h1 class='col-10'>Listado de propuestas</h1>
+                <div class='col-2'>
+                    <button class='btn btn-success' onclick='ImprimirPropuestas()'><i class="bi bi-printer"></i> Imprimir</button>
+                </div>
+            {% else %}
+                <h1 class='col-12'>Estado de las propuestas</h1>
+            {% endif %}
+        </div>
+        <div  scope='col' class="table-responsive" class='col-12' id='div_activos'>                
+            <div id="activosSeleccionados" class="alert alert-info" style="display: none;">
+                <strong>Activos seleccionados:</strong>
+                <span id="resumenActivos"></span>
+                <button type="button" class="btn btn-primary" onclick="enviarPropuestas()">
+                    {% if user.cliente %}
+                        Seleccionar activos
+                    {% else %}
+                        Enviar
+                    {% endif %}
+                </button>
+            </div>
+            <table class="table table-striped table-hover col-10">
+                <thead class="table-dark">
+                    <tr>
+                        {% if not user.cliente %}
+                            <th scope="col">Estado</th>
+                            <th scope="col">
+                                Responsable
+                                <!--<div class="dropdown" style='margin-left: 5px'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/misofertas/" hx-trigger="click" hx-target="#main-content"> Todos</a></li>
+                                    {% for responsable in responsables %}
+                                        <a class="dropdown-item" href="#" hx-get="/misofertas/?responsable={{responsable.pk}}" hx-trigger="click" hx-target="#main-content">{{cliente.responsable.nombre}}</a></li>
+                                    {% endfor %}
+                                  </ul>-->
+                            </th>
+                            <th scope="col">
+                                Cliente 
+                                <!--<div class="dropdown" style='margin-left: 5px'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente=&representante={{mirepresentante_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-trigger="click" hx-target="#main-content"> Todos</a></li>
+                                    {% for cliente in clientes %}
+                                        <a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{cliente.pk}}&representante={{mirepresentante_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-trigger="click" hx-target="#main-content">{{cliente.DameNombre}}</a></li>
+                                    {% endfor %}
+                                  </ul>-->
+                            </th>
+                        {% else %}
+                            {% if propuestapendiente %}
+                                <th scope="col"></th>
+                            {% endif %}
+                        {% endif %}                        
+                        <th scope="col">
+                            Id
+                        </th>                            
+                        <th scope="col">
+                            Clasif
+                            {% if not user.cliente %}
+                                <div class="dropdown" style="margin-left: 5px" name="filtro_dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">
+                                        {{ miclasif|default:"Todas" }}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               href="#"
+                                               hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}"
+                                               hx-trigger="click"
+                                               hx-target="#body_activoModal"
+                                               hx-swap="innerHTML"
+                                               hx-push-url="false">
+                                               Todas
+                                            </a>
+                                        </li>
+                                        {% for clasif in clasificaciones %}
+                                            <li>
+                                                <a class="dropdown-item"
+                                                   href="#"
+                                                   hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{ clasif }}"
+                                                   hx-trigger="click"
+                                                   hx-target="#body_activoModal"
+                                                   hx-swap="innerHTML"
+                                                   hx-push-url="false">
+                                                   {{ clasif }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </th>                        
+                        <th scope="col">
+                            Grupo
+                            {% if not user.cliente %}
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{migrupo_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}" hx-trigger="click" hx-target="#body_activoModal"> Todas</a></li>
+                                    {% for grupo in grupos %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&grupo={{grupo.pk}}"  hx-trigger="click" hx-target="#body_activoModal">{{ grupo.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th scope="col">
+                            Tipología 
+                            {% if not user.cliente %}
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{mitipo_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }" hx-trigger="click" hx-target="#body_activoModal"> Todas</a></li>
+                                    {% for tipo in tipos %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&tipo={{tipo.pk}}"  hx-trigger="click" hx-target="#body_activoModal">{{ tipo.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th scope="col">Ref catastral</th>
+                        <th scope="col">Dirección</th>
+                        <th scope="col">Población
+                            {% if not user.cliente %}
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{mipoblacion_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&poblacion=" hx-trigger="click" hx-target="#body_activoModal"> Todas</a></li>
+                                    {% for poblacion in poblaciones %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&poblacion={{poblacion.pk}}"  hx-trigger="click" hx-target="#body_activoModal">{{ poblacion.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th scope="col">
+                            Provincia 
+                            {% if not user.cliente %}
+                                <div class="dropdown" style='margin-left: 5px' name='filtro_dropdown'>
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0px; padding-left: 2px;">{{miprovincia_nombre}}
+                                  </button>
+                                  <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&provincia=" hx-trigger="click" hx-target="#main-content"> Todas</a></li>
+                                    {% for provincia in provincias %}
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/{{ ofertas.0.propuesta_id }}/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&provincia={{provincia.pk}}" hx-trigger="click" hx-target="#main-content">{{ provincia.nombre }}</a></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th scope="col" class="text-end">Precio</th>
+                        <th scope="col">Observaciones</th>
+                        <th scope="col"></th>
+
+                        {% if not propuestapendiente and user.cliente %}
+                            <th scope="col">Estado Propuesta</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for oferta in ofertas %}
+                        <tr name='tr_resultado'>
+                            {% if not user.cliente %}
+                                <td>
+                                    <span>{{ oferta.get_estado_display }}</span>
+                                </td> 
+                            {% endif %}                          
+                            {% if not user.cliente %}
+                                <td>{{ responsable }}</td>
+                                <td>{{ nombreCompletoCliente.nombre_completo }}</td>
+                            {% else %}
+                                {% if propuestapendiente %}
+                                    {% if oferta.estado == '' %}
+                                        <td><label for='c_sel_propuesta{{oferta.id}}' class='d-none'>{{ oferta.campanya_linea.activo.ref_catastral }}</label><input type="checkbox" name="c_sel_propuesta" value='{{oferta.id}}' id='c_sel_propuesta{{oferta.id}}' onchange="actualizarResumenModalPropuesta()"></td>
+                                    {% else %}
+                                        <td><span style="border: 1px solid black; padding:5px; border-radius: 20px; background-color: green; color: white;">{{oferta.get_estado_display}}</span></td>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                            <td>{{ oferta.campanya_linea.activo.id_proveedor }}</td>
+                            <td>{{ oferta.campanya_linea.get_tipo_display}}
+                            <td>{% if oferta.campanya_linea.activo.tipologia.grupo %}{{ oferta.campanya_linea.activo.tipologia.grupo.nombre }}{% endif %}</td>
+                            <td>{{ oferta.campanya_linea.activo.tipologia.nombre }}</td>
+                            <td>{{ oferta.campanya_linea.activo.ref_catastral }}</td>
+                            <td>{{ oferta.campanya_linea.activo.direccion }}</td>
+                            <td>{{ oferta.campanya_linea.activo.poblacion }}</td>
+                            <td>{{ oferta.campanya_linea.activo.poblacion.provincia }}</td>
+                            <td class="text-end">
+                                {% if oferta.campanya_linea.precio %}{{ oferta.campanya_linea.precio | floatformat:"g" }}
+                            {% endif %}</td>
+                            <td> {{ oferta.campanya_linea.DameObservaciones }}</td>
+                            <td>
+                                <button type="button" class="btn" style="margin: 0px; padding:0px;">
+                                    <a href="{% url 'detallelinea' oferta.campanya_linea.pk %}" target="_blank">
+                                        🔎
+                                    </a>
+                                </button>
+                            </td>
+                            {% if not propuestapendiente and user.cliente %}
+                                <td id='td_oferta_{{oferta.pk}}'>
+                                    {% if user.cliente %}
+                                        {% if oferta.estado == 'R' %}
+                                            Petición de reserva
+                                        {% elif oferta.estado == 'I' %}
+                                            Informado su interés
+                                        {% elif oferta.estado == 'E' %}
+                                            Recabando más información
+                                        {% elif oferta.estado == 'N' %}
+                                            Informado que no está interesado
+                                        {% elif oferta.estado == 'R' %}
+                                            Reservado
+                                        {% elif oferta.estado == 'P' %}
+                                            <button type="button" 
+                                                    class="btn btn-success" 
+                                                    title="Reserva" 
+                                                    hx-get="/activo/api?id={{oferta.campanya_linea.activo.id}}&accion=cliente&estado=reserva"
+                                                    hx-target="#td_oferta_{{oferta.pk}}" 
+                                                    hx-trigger="click">
+                                                    Reservar
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if oferta.estado == 'R' %}
+                                            <button type="button" 
+                                                    class="btn btn-success" 
+                                                    title="Petición de reserva" 
+                                                    hx-get="/activo/api?id={{oferta.campanya_linea.activo.id}}&accion=cliente&estado=aceptarconfirmacion"
+                                                    hx-target="#td_oferta_{{oferta.pk}}" 
+                                                    hx-trigger="click">
+                                                    ACEPTAR Confirmación
+                                            </button>
+                                        {% elif oferta.estado == 'N' %}
+                                            <button type="button" 
+                                                    class="btn btn-danger" 
+                                                    title="NO interesa al cliente" 
+                                                    hx-get="/activo/api?id={{oferta.campanya_linea.activo.id}}&accion=cliente&estado=aceptarnointeresa"
+                                                    hx-target="#td_oferta_{{oferta.pk}}" 
+                                                    hx-trigger="click">
+                                                    ACEPTAR QUE NO INTERESA AL CLIENTE
+                                            </button>
+                                        {% elif oferta.estado == 'P' %}
+                                            Esperando la confirmación del cliente desde el {{oferta.preparado_responsable}}
+                                        {% elif oferta.estado == 'I' %}
+                                            <button type="button" 
+                                                    class="btn btn-info" 
+                                                    title="DATOS PREPARADOS" 
+                                                    hx-get="/activo/api?id={{oferta.campanya_linea.activo.id}}&accion=cliente&estado=preparado"
+                                                    hx-target="#td_oferta_{{oferta.pk}}" 
+                                                    hx-trigger="click">
+                                                    DAR LOS DATOS COMO CUMPLIMENTADOS
+                                            </button>
+                                        {% elif oferta.estado == '' %}
+                                            Esperando la decisión del cliente
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+
+    <!--<div class="container-fluid">
+        <input type="number" id="txt_mirepresentante_oferta" value='{{mirepresentante_id}}' class='d-none'>
+        <input type="number" id="txt_micliente_oferta" value='{{micliente_id}}' class='d-none'>
+        <input type="text" id="txt_miclasif_oferta" value='{{miclasif}}' class='d-none'>
+        <input type="number" id="txt_migrupo_oferta" value='{{migrupo_id}}' class='d-none'>
+        <input type="number" id="txt_mitipo_oferta" value='{{mitipo_id}}' class='d-none'>
+        <input type="number" id="txt_mipoblacion_oferta" value='{{mipoblacion_id}}' class='d-none'>
+        <input type="number" id="txt_miprovincia_oferta" value='{{miprovincia_id}}' class='d-none'>
+    
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>{% if propuestapendiente or not user.cliente %}Listado de propuestas{% else %}Estado de las propuestas{% endif %}</h1>
+            {% if propuestapendiente or not user.cliente %}
+                <button class='btn btn-success' onclick='ImprimirPropuestas()'>
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+            {% endif %}
+        </div>
+    
+        <div id="activosSeleccionados" class="alert alert-info mb-3" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Activos seleccionados:</strong>
+                    <span id="resumenActivos"></span>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="enviarPropuestas()">
+                    {% if user.cliente %}Seleccionar activos{% else %}Enviar{% endif %}
+                </button>
+            </div>
+        </div>
+    
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        {% if not user.cliente %}
+                            <th>Responsable
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/" hx-target="#main-content">Todos</a></li>
+                                        {% for responsable in responsables %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?responsable={{responsable.pk}}" hx-target="#main-content">{{responsable.nombre}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </th>
+                            <th>Cliente
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente=&representante={{mirepresentante_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">Todos</a></li>
+                                        {% for cliente in clientes %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{cliente.pk}}&representante={{mirepresentante_id}}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">{{cliente.DameNombre}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </th>
+                        {% elif propuestapendiente %}
+                            <th>Selección</th>
+                        {% endif %}
+                        
+                        <th>ID</th>
+                        <th>Clasif
+                            {% if not user.cliente %}
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                        {{miclasif|default:"Todas"}}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif=&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">Todas</a></li>
+                                        {% for clasif in clasificaciones %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{clasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">{{clasif}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th>Grupo
+                            {% if not user.cliente %}
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                        {{migrupo_nombre|default:"Todos"}}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo=&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">Todos</a></li>
+                                        {% for grupo in grupos %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{grupo.pk}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">{{grupo.nombre}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th>Tipología
+                            {% if not user.cliente %}
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                        {{mitipo_nombre|default:"Todas"}}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo=&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">Todas</a></li>
+                                        {% for tipo in tipos %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{tipo.pk}}&provincia={{miprovincia_id}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">{{tipo.nombre}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th>Ref. catastral</th>
+                        <th>Dirección</th>
+                        <th>Población
+                            {% if not user.cliente %}
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                        {{mipoblacion_nombre|default:"Todas"}}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion=" hx-target="#main-content">Todas</a></li>
+                                        {% for poblacion in poblaciones %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{miprovincia_id}}&poblacion={{poblacion.pk}}" hx-target="#main-content">{{poblacion.nombre}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th>Provincia
+                            {% if not user.cliente %}
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle py-0" type="button" data-bs-toggle="dropdown">
+                                        {{miprovincia_nombre|default:"Todas"}}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia=&poblacion={{mipoblacion_id}}" hx-target="#main-content">Todas</a></li>
+                                        {% for provincia in provincias %}
+                                            <li><a class="dropdown-item" href="#" hx-get="/misofertas/?cliente={{ nombreCompletoCliente.nombre_completo }}&representante={{ responsable }}&clasif={{miclasif}}&grupo={{migrupo_id}}&tipo={{mitipo_id}}&provincia={{provincia.pk}}&poblacion={{mipoblacion_id}}" hx-target="#main-content">{{provincia.nombre}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </th>
+                        <th class="text-end">Precio</th>
+                        <th>Observaciones</th>
+                        <th>Detalle</th>
+                        
+                        {% if not propuestapendiente and user.cliente %}
+                            <th>Estado</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    {% if ofertas %}
+                        {% for oferta in ofertas %}
+                            <tr>
+                                {% if not user.cliente %}
+                                    <td>{{ responsable }}</td>
+                                    <td>{{ nombreCompletoCliente.nombre_completo }}</td>
+                                {% elif propuestapendiente %}
+                                    <td>
+                                        {% if oferta.estado == '' %}
+                                            <input type="checkbox" name="c_sel_propuesta" value="{{oferta.id}}" id="c_sel_propuesta{{oferta.id}}" onchange="actualizarResumenModalPropuesta()">
+                                            <label for="c_sel_propuesta{{oferta.id}}" class="d-none">{{ oferta.campanya_linea.activo.ref_catastral }}</label>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ oferta.get_estado_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                                
+                                <td>{{ oferta.campanya_linea.activo.id_proveedor|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.get_tipo_display|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.activo.tipologia.grupo.nombre|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.activo.tipologia.nombre|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.activo.ref_catastral|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.activo.direccion|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.activo.poblacion.nombre|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.activo.poblacion.provincia.nombre|default:"-" }}</td>
+                                <td class="text-end">{{ oferta.campanya_linea.precio|floatformat:"g"|default:"-" }}</td>
+                                <td>{{ oferta.campanya_linea.DameObservaciones|default:"-" }}</td>
+                                <td>
+                                    <a href="{% url 'detallelinea' oferta.campanya_linea.pk %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="bi bi-search"></i>
+                                    </a>
+                                </td>
+                                
+                                {% if not propuestapendiente and user.cliente %}
+                                    <td id="td_oferta_{{oferta.pk}}">
+                                        {% if oferta.estado == 'R' %}
+                                            <span class="badge bg-info">Petición de reserva</span>
+                                        {% elif oferta.estado == 'I' %}
+                                            <span class="badge bg-primary">Informado su interés</span>
+                                        {% elif oferta.estado == 'E' %}
+                                            <span class="badge bg-warning">Recabando información</span>
+                                        {% elif oferta.estado == 'N' %}
+                                            <span class="badge bg-danger">No está interesado</span>
+                                        {% elif oferta.estado == 'P' %}
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                hx-get="/activo/api?id={{oferta.campanya_linea.activo.id}}&accion=cliente&estado=reserva"
+                                                hx-target="#td_oferta_{{oferta.pk}}">
+                                                Reservar
+                                            </button>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="{% if not user.cliente %}15{% else %}{% if propuestapendiente %}14{% else %}12{% endif %}{% endif %}" class="text-center text-muted py-4">
+                                No se encontraron propuestas con los filtros actuales
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>-->
+    
+    <script>
+        function actualizarResumenModalPropuesta() {
+            const checkboxes = document.querySelectorAll("input[name='c_sel_propuesta']:checked");
+            const resumenContainer = document.getElementById("activosSeleccionados");
+            const resumenText = document.getElementById("resumenActivos");
+            
+            if (checkboxes.length > 0) {
+                resumenText.textContent = `${checkboxes.length} propuesta(s) seleccionada(s)`;
+                resumenContainer.style.display = "block";
+            } else {
+                resumenContainer.style.display = "none";
+            }
+        }
+    
+        function enviarPropuestas() {
+            const propuestas = Array.from(document.querySelectorAll('input[name="c_sel_propuesta"]:checked')).map(el => el.value);
+            
+            fetch('/activo/api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    accion: 'aceptar_propuesta',
+                    propuestas_id: propuestas.join(',')
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    showAlert('Error: ' + (data.message || 'No se pudieron enviar las propuestas'), 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Ocurrió un error al enviar las propuestas: ' + error, 'danger');
+            });
+        }
+    
+        function ImprimirPropuestas() {
+            window.print();
+        }
+    </script>
+
+<!-- Modal -->
+    <div class="modal fade" id="activoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle del activo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id='body_activoModal'>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        function actualizarResumenModalPropuesta() {
+            const checkboxes = document.querySelectorAll("input[name='c_sel_propuesta']");
+            const resumenContainer = document.getElementById("activosSeleccionados");
+            const resumenText = document.getElementById("resumenActivos");
+            // Limitar a 5 selecciones
+            const seleccionados = Array.from(checkboxes).filter(checkbox => checkbox.checked);
+
+            // if (seleccionados.length > 5) {
+            //     alert("Solo puede seleccionar hasta 5 posiciones.");
+            //     // Desmarcar el último seleccionado si supera el límite
+            //     const ultimoSeleccionado = seleccionados[5];
+            //     if (ultimoSeleccionado) {
+            //         ultimoSeleccionado.checked = false;
+            //     }
+            //     return;
+            // }
+            const textosSeleccionados = seleccionados.map(checkbox => obtenerTextoLabel(checkbox));
+
+            if (textosSeleccionados.length > 0) {
+                resumenText.innerHTML = `${textosSeleccionados.length} posicion(es) seleccionada(s)`; //: <strong>${textosSeleccionados.join(", ")}</strong>
+                resumenContainer.style.display = "block";
+            } else {
+                resumenContainer.style.display = "none"; // Ocultar si no hay seleccionados
+                resumenText.innerHTML = "";
+            }
+        }
+
+        function obtenerTextoLabel(checkbox) {
+            const label = document.querySelector(`label[for="${checkbox.id}"]`);
+            return label ? label.textContent.trim() : "";            
+        }
+
+        function enviarPropuestas(){
+            const propuestas = document.querySelectorAll('input[name="c_sel_propuesta"]:checked');
+            const propuestasSeleccionadas = []
+            propuestas.forEach(elemento => {
+                propuestasSeleccionadas.push(elemento.value);
+            })
+            const propuestasStr = propuestasSeleccionadas.join(',');
+
+            fetch('/activo/api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({ accion: 'aceptar_propuesta', propuestas_id: propuestasStr }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); // Procesar la respuesta si es necesario
+                } else {
+                    showAlert('Error en la solicitud al servidor', 'danger');
+                    throw new Error('Error en la solicitud al servidor');
+                }
+            })
+            .then(data => {
+                window.location.reload(); // Corrección del método
+            })
+            .catch(error => {
+                showAlert('Error al enviar las propuestas: ' + error, 'danger');
+            });
+        }
+
+
+        
+    </script>
+{% endblock %}
+

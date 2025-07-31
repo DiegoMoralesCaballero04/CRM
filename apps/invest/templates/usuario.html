@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% block contenido %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-lg mb-4" id='card_listado_usuario'>
+                    <div class="card-header bg-success text-white">
+                        <h3 class="mb-0">Listado de Usuarios</h3>
+                    </div>
+                    <div class="card-body">                        
+                        <table class="table" id="itemList">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Empresa</th>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col">Administración/Operario</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody id='itemListBody'>
+                            </tbody>
+                        </table>
+                        <button class='btn btn-primary' onclick="MostrarUsuario()">Crear Usuario</button>
+                    </div>
+                </div>
+                <div class="card shadow-lg mb-4" id='card_listado_subcontrata'>
+                    <div class="card-header bg-success text-white">
+                        <h3 class="mb-0">Listado de Subcontratas</h3>
+                    </div>
+                    <div class="card-body">                        
+                        <table class="table" id="itemList">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody id='itemListBody_subcontrata'>
+                            </tbody>
+                        </table>
+                        <button class='btn btn-primary' onclick='MostrarSubcontrata()'>Crear Empresa</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-lg d-none" id='card_subcontrata'>
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Datos de la subcontrata</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id='form_subcontrata'>
+                            {% csrf_token %}
+                            <input type="text" class="form-control d-none" id="codigo_subcontrata" name="codigo_subcontrata">
+                            <div class="mb-3">
+                                <label for="nombre_subcontrata" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre_subcontrata" name="nombre_subcontrata" placeholder="Introduzca el nombre de la subcontrata">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card shadow-lg" id='card_usuario'>
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Datos del usuario</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id='form_usuario'>
+                            {% csrf_token %}
+                            <input type="text" class="form-control d-none" id="codigo" name="codigo">
+                            <div class="mb-3">
+                                <label for="usuario" class="form-label">Nombre en la aplicación</label>
+                                <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Introduzca el nombre en la aplicación">
+                            </div>
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre y apellidos</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Introduzca nombre y apellidos">
+                            </div>
+                            <div class="mb-3">
+                                <label for="subcontrata" class="form-label">Empresa</label>
+                                <select class="form-select" id="subcontrata" name="subcontrata">
+                                    <option value=''>---</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id='div_clave'>
+                                <label for="clave" class="form-label">Contraseña</label>
+                                <input type="text" class="form-control" id="clave" name="clave" placeholder="Introduzca la clave">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="rol" id="administracion" value="administracion">
+                                    <label class="form-check-label" for="administracion">Administración</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="rol" id="operario" value="operario" checked>
+                                    <label class="form-check-label" for="operario">Operario</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cambioclaveModal" tabindex="-1" role="dialog" aria-labelledby="cambioclaveModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cambioclaveModalLabel">Nueva clave</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id='form_clave'>
+                        <input type="text" class="form-control d-none" id="codigo_clave" name="codigo_clave">
+                        <div class="form-group">
+                            <label for="recipient-name" class="col-form-label">Introduzca la clave:</label>
+                            <input type="password" class="form-control" id="recipient-name" name='clave1'>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipient-name" class="col-form-label">Repita la clave:</label>
+                            <input type="password" class="form-control" id="recipient-name" name='clave2'>
+                        </div>
+                        <button type="submit" class="btn btn-primary d-none" id='bot_cambiarclave'>Cambiar Clave</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Anular</button>
+                    <button type="button" class="btn btn-primary" onclick='CambiarClave()'>Cambiar Clave</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+        $(document).ready(function() {
+            ActualizaListaUsuarios()
+            ActualizaListaSubcontratas()
+            $('#form_usuario').on('submit', function(event) {
+                event.preventDefault(); // Evitar el envío tradicional del formulario
+
+                // Realizar la solicitud AJAX
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: $('#form_usuario').serialize(), 
+                    success: function(response) {
+                        console.log("form_usuario" + response)
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            showAlert(response.literror, 'success');
+                            ActualizaListaUsuarios()
+                            LimpiarPantallaUsuario()
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error("¡Error en la solicitud!");
+                        console.error(textStatus, errorThrown);
+                    },
+                    complete: function(jqXHR, textStatus) {
+                        console.log("Solicitud finalizada.");
+                    }
+                });
+            });
+            $('#form_subcontrata').on('submit', function(event) {
+                event.preventDefault(); // Evitar el envío tradicional del formulario
+
+                // Realizar la solicitud AJAX
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: $('#form_subcontrata').serialize(), 
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            showAlert(response.literror, 'success');
+                            ActualizaListaSubcontratas()
+                            LimpiarPantallaSubcontrata()
+                        }
+                    },
+                });
+            });
+            $('#form_clave').on('submit', function(event) {
+                event.preventDefault(); // Evitar el envío tradicional del formulario
+
+                // Realizar la solicitud AJAX
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: $('#form_clave').serialize(), 
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            showAlert(response.literror, 'success');
+                            $("#cambioclaveModal").modal("hide")
+                        }
+                    },
+                });
+            });
+        });
+
+        function ActualizaListaUsuarios(){
+            $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: {"accion":"damelistado"},
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            $("#itemListBody").empty()
+                            $("#itemListBody").append(response.html)
+                        }
+                    },
+                });
+        }
+
+        function MostrarUsuario(){
+            if (!$("#card_subcontrata").hasClass("d-none")){
+                $("#card_subcontrata").addClass("d-none")
+            }
+            LimpiarPantallaUsuario()
+            $("#card_usuario").removeClass("d-none")
+        }
+
+        function SeleccionarUsuario(usuario){
+            $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: {"accion":"cargar", "id":usuario},
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            MostrarUsuario()
+                            $("#codigo").val(response.codigo)
+                            $("#usuario").val(response.usuario)
+                            $("#nombre").val(response.nombre)
+                            $("#subcontrata").val(response.subcontrata)
+                            if (response.operario){
+                                $("#operario").prop('checked', true)
+                            }else{
+                                $("#administracion").prop('checked', true)
+                            }
+                            if (!$("#div_clave").hasClass("d-none")){
+                                $("#div_clave").addClass("d-none")
+                            }
+                            $("#cambioclaveModalLabel").html("Cambio de clave para " + response.usuario)
+                        }
+                    },
+                });
+        }
+
+        function LimpiarPantallaUsuario(){
+            $("#codigo").val("")
+            $("#usuario").val("")
+            $("#nombre").val("")
+            $("#operario").prop('checked', true)
+            $("#clave").val("")
+            $("#div_clave").removeClass("d-none")
+        }
+
+        function AnularUsuario(usuario){
+            if (confirm("¿Desea realmente eliminar este usuario?")){
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: {"accion":"anular_usuario", "id":usuario},
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            showAlert(response.literror, 'success');
+                            ActualizaListaUsuarios()
+                        }
+                    },
+                });
+            }
+        }
+
+        function MostrarCambiarClave(usuario){
+            $("#cambioclaveModal").modal('show')
+            $("#codigo_clave").val(usuario)
+            $("#clave1").val("")
+            $("#clave2").val("")
+        }
+
+        function CambiarClave(){
+            $("#bot_cambiarclave").click()
+        }
+
+
+        function ActualizaListaSubcontratas(){
+            $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: {"accion":"damelistado_subcontrata"},
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            $("#subcontrata").empty()
+                            $("#subcontrata").append(response.html_select)
+                            $("#itemListBody_subcontrata").empty()
+                            $("#itemListBody_subcontrata").append(response.html)
+                        }
+                    },
+                });
+        }
+
+        function MostrarSubcontrata(){
+            if (!$("#card_usuario").hasClass("d-none")){
+                $("#card_usuario").addClass("d-none")
+            }
+            LimpiarPantallaSubcontrata()
+            $("#card_subcontrata").removeClass("d-none")
+        }
+
+        function SeleccionarSubcontrata(subcontrata){
+            $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: {"accion":"cargar_subcontrata", "id":subcontrata},
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            showAlert(response.literror, 'success');
+                            MostrarSubcontrata()
+                            $("#codigo_subcontrata").val(response.codigo)
+                            $("#nombre_subcontrata").val(response.nombre)
+                        }
+                    },
+                });
+        }
+
+        function LimpiarPantallaSubcontrata(){
+            $("#codigo_subcontrata").val("")
+            $("#nombre_subcontrata").val("")
+        }
+
+        function AnularSubcontrata(subcontrata){
+            if (confirm("?Desea realmente eliminar esta subcontrata?")){
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url 'usuariogestion' %}',
+                    data: {"accion":"anular_subcontrata", "id":subcontrata},
+                    success: function(response) {
+                        if (response.error){
+                            showAlert(response.literror, 'danger');
+                        }else{
+                            showAlert(response.literror, 'success');
+                            ActualizaListaSubcontratas()
+                            ActualizaListaUsuarios()
+                        }
+                    },
+                });
+            }
+        }
+
+    </script>
+{% endblock %}
